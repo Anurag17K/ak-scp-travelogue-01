@@ -1,0 +1,44 @@
+/* theme.css */
+
+/* Smooth transition for body and cards */
+body {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Theme Panel */
+.theme-panel {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 180px;
+}
+
+.theme-panel label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Random category panel */
+.random-category-panel {
+    display: none;
+    margin-top: 10px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+}
+
+.random-category-panel button {
+    margin: 3px 0;
+    width: 100%;
+}
+
+/* Generic buttons */
+button {
+    cursor: pointer;
+}

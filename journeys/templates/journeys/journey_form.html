@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add / Edit Journey</title>
+</head>
+<body>
+
+<h2>Journey Details</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <input type="text" name="title" placeholder="Journey Title"
+           value="{{ journey.title|default:'' }}" required><br><br>
+
+    <input type="date" name="trip_date"
+           value="{{ journey.trip_date|default:'' }}" required><br><br>
+
+    <textarea name="description" placeholder="Journey Notes">{{ journey.description|default:'' }}</textarea><br><br>
+
+    <select name="theme">
+        <option value="beach">Beach</option>
+        <option value="city">City</option>
+        <option value="night">Night</option>
+        <option value="mountain">Mountain</option>
+    </select><br><br>
+
+    <button type="submit">Save</button>
+</form>
+
+<a href="{% url 'journey_list' %}">Back</a>
+
+</body>
+</html>

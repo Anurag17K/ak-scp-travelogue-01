@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Journey Journal</title>
+    {% load static %}
+
+    <!-- Link theme CSS -->
+    <link rel="stylesheet" href="{% static 'journeys/theme.css' %}">
+
+    <!-- Optional minimal app-specific styles -->
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .card {
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 6px 12px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        a {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Personal Journey Journal</h1>
+
+    <div>
+        <!-- Change Theme Button -->
+        <button id="changeThemeBtn">Change Theme</button>
+
+        <!-- Theme Panel -->
+        <div class="theme-panel" id="themePanel">
+            <label>
+                <input type="radio" name="themeOption" value="default" checked>
+                Default
+            </label>
+            <label>
+                <input type="radio" name="themeOption" value="dark">
+                Dark
+            </label>
+
+            <!-- Random Theme Expandable -->
+            <button id="randomMainBtn">Random Theme ▸</button>
+            <div class="random-category-panel" id="randomCategoryPanel">
+                <button data-category="beach">Beach</button>
+                <button data-category="city">City</button>
+                <button data-category="night">Night</button>
+                <button data-category="mountain">Mountain</button>
+            </div>
+        </div>
+
+        <span>
+            Logged in as: <strong>{{ request.user.username }}</strong>
+        </span>
+
+        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</div>
+
+<a href="{% url 'journey_create' %}">Add New Journey</a>
+
+{% for journey in journeys %}
+    <div class="card">
+        <h2>{{ journey.title }}</h2>
+        <p><strong>Date:</strong> {{ journey.trip_date }}</p>
+        <p>{{ journey.description }}</p>
+
+        <a href="{% url 'journey_update' journey.id %}">Edit</a>
+        <a href="{% url 'journey_delete' journey.id %}">Delete</a>
+    </div>
+{% empty %}
+    <p>No journeys added yet.</p>
+{% endfor %}
+
+<!-- Include theme JS at the end -->
+<script src="{% static 'journeys/theme.js' %}"></script>
+
+</body>
+</html>

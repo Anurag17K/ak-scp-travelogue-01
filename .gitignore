@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+themevenv/
+
+# Django
+db.sqlite3
+*.log
+staticfiles/
+media/
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Elastic Beanstalk
+.elasticbeanstalk/*
+!.elasticbeanstalk/config.yml
+
+# Cloud9
+.c9/
