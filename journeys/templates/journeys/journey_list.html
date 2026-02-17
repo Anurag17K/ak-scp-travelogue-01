@@ -2,10 +2,6 @@
 <html>
 <head>
     <title>Journey Journal</title>
-    {% load static %}
-
-    <!-- Link theme CSS -->
-    <link rel="stylesheet" href="{% static 'journeys/theme.css' %}">
 
     <!-- Optional minimal app-specific styles -->
     <style>
@@ -44,30 +40,6 @@
     <h1>Personal Journey Journal</h1>
 
     <div>
-        <!-- Change Theme Button -->
-        <button id="changeThemeBtn">Change Theme</button>
-
-        <!-- Theme Panel -->
-        <div class="theme-panel" id="themePanel">
-            <label>
-                <input type="radio" name="themeOption" value="default" checked>
-                Default
-            </label>
-            <label>
-                <input type="radio" name="themeOption" value="dark">
-                Dark
-            </label>
-
-            <!-- Random Theme Expandable -->
-            <button id="randomMainBtn">Random Theme ▸</button>
-            <div class="random-category-panel" id="randomCategoryPanel">
-                <button data-category="beach">Beach</button>
-                <button data-category="city">City</button>
-                <button data-category="night">Night</button>
-                <button data-category="mountain">Mountain</button>
-            </div>
-        </div>
-
         <span>
             Logged in as: <strong>{{ request.user.username }}</strong>
         </span>
@@ -94,8 +66,10 @@
     <p>No journeys added yet.</p>
 {% endfor %}
 
-<!-- Include theme JS at the end -->
-<script src="{% static 'journeys/theme.js' %}"></script>
+<!-- Include your GitHub Pages-hosted theme widget -->
+<!--<script src="https://Anurag17K.github.io/themes-widget/themes-widget.js"></script>-->
+<script src="https://anuragktech.me/themes-widget/themes-widget.js"></script>
+
 
 </body>
 </html>
