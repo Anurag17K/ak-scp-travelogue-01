@@ -16,18 +16,15 @@
     <input type="date" name="trip_date"
            value="{{ journey.trip_date|default:'' }}" required><br><br>
 
-    <textarea name="description" placeholder="Journey Notes">{{ journey.description|default:'' }}</textarea><br><br>
+    <input type="text" name="city" placeholder="City Name"
+           value="{{ journey.city|default:'' }}" required><br><br>
 
-    <select name="theme">
-        <option value="beach">Beach</option>
-        <option value="city">City</option>
-        <option value="night">Night</option>
-        <option value="mountain">Mountain</option>
-    </select><br><br>
+    <textarea name="description" placeholder="Journey Notes">{{ journey.description|default:'' }}</textarea><br><br>
 
     <button type="submit">Save</button>
 </form>
 
+<br>
 <a href="{% url 'journey_list' %}">Back</a>
 
 </body>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Consultation</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background-color: #f4f4f9; }
+        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .slot-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+        .slot-time { font-size: 1.1em; font-weight: bold; margin-bottom: 10px; display: block; }
+        .book-btn { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; }
+        .book-btn:hover { background: #218838; }
+        .back-link { display: block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;}
+        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
+        .error { background-color: #dc3545; }
+        .filter-form { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<h2>Schedule a Trip Planning Consultation</h2>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="filter-form">
+    <form method="GET" action="{% url 'available_consultations' %}">
+        <label for="date" style="font-weight: bold;">Select Date:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}" style="padding: 5px; margin: 0 10px;">
+        <button type="submit" style="padding: 6px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Check Availability</button>
+    </form>
+</div>
+
+<p>Showing available slots for: <strong>{{ selected_date }}</strong></p>
+
+<div class="slot-grid">
+    {% for slot in slots %}
+        <div class="slot-card">
+            <span class="slot-time">{{ slot.time }}</span>
+            
+            <form method="POST" action="{% url 'book_consultation' slot.slot_id %}">
+                {% csrf_token %}
+                <button type="submit" class="book-btn">Book This Slot</button>
+            </form>
+        </div>
+    {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #ddd;">
+            <p>No available slots found for this date.</p>
+            <small>Try selecting a different date from the calendar above.</small>
+        </div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'journey_list' %}" class="back-link">← Back to Dashboard</a>
+
+</body>
+</html>

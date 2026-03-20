@@ -2,48 +2,27 @@
 <html>
 <head>
     <title>Journey Journal</title>
-
-    <!-- Optional minimal app-specific styles -->
     <style>
-        body {
-            font-family: Arial;
-            margin: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-
-        .card {
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 10px;
-        }
-
-        button {
-            padding: 6px 12px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-
-        a {
-            margin-right: 10px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333333; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; padding: 8px 12px; background: #fff; border: 1px solid #007bff; border-radius: 5px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .nav-links a:hover { background: #007bff; color: #fff; }
+        .card { padding: 20px; margin: 15px 0; border-radius: 10px; background-color: #ffffff; border-left: 5px solid #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
+        .success { background-color: #28a745; }
+        .error { background-color: #dc3545; }
+        button { padding: 6px 12px; margin-right: 5px; cursor: pointer; background-color: #007bff; color: #ffffff; border: none; border-radius: 6px; }
+        button:hover { background-color: #0056b3; }
+        a.action { margin-right: 10px; color: #007bff; font-weight: bold; text-decoration: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Personal Journey Journal</h1>
-
     <div>
-        <span>
-            Logged in as: <strong>{{ request.user.username }}</strong>
-        </span>
-
+        <span>Logged in as: <strong>{{ request.user.username }}</strong></span>
         <form action="{% url 'logout' %}" method="post" style="display:inline;">
             {% csrf_token %}
             <button type="submit">Logout</button>
@@ -51,25 +30,31 @@
     </div>
 </div>
 
-<a href="{% url 'journey_create' %}">Add New Journey</a>
+{% if messages %}
+    {% for message in messages %}
+        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="nav-links">
+    <a href="{% url 'journey_create' %}">+ Add New Journey</a>
+    <a href="{% url 'available_consultations' %}"> > Book a Consultation</a>
+    <a href="{% url 'my_appointments' %}"> > My Bookings</a>
+</div>
 
 {% for journey in journeys %}
     <div class="card">
         <h2>{{ journey.title }}</h2>
         <p><strong>Date:</strong> {{ journey.trip_date }}</p>
+        <p><strong>City:</strong> {{ journey.city }}</p>
         <p>{{ journey.description }}</p>
-
-        <a href="{% url 'journey_update' journey.id %}">Edit</a>
-        <a href="{% url 'journey_delete' journey.id %}">Delete</a>
+        <a class="action" href="{% url 'journey_detail' journey.id %}">View</a>
+        <a class="action" href="{% url 'journey_update' journey.id %}">Edit</a>
+        <a class="action" href="{% url 'journey_delete' journey.id %}">Delete</a>
     </div>
 {% empty %}
     <p>No journeys added yet.</p>
 {% endfor %}
-
-<!-- Include your GitHub Pages-hosted theme widget -->
-<!--<script src="https://Anurag17K.github.io/themes-widget/themes-widget.js"></script>-->
-<script src="https://anuragktech.me/themes-widget/themes-widget.js"></script>
-
 
 </body>
 </html>

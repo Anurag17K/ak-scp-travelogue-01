@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Journey Details</title>
+    <style>
+        body { font-family: Arial; max-width: 900px; margin: auto; background-color: #f4f4f9; color: #333;}
+        button { padding: 8px 14px; margin-right: 10px; cursor: pointer; border-radius: 6px; border: none; background-color: #007bff; color: white; }
+        button:hover { background-color: #0056b3; }
+        .service-card { border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 12px; border-radius: 10px; background-color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .service-type { font-size: 13px; color: gray; text-transform: capitalize; }
+        .back-link { color: #007bff; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px;}
+    </style>
+</head>
+<body>
+
+<h2>{{ journey.title }}</h2>
+
+<p><strong>City:</strong> {{ journey.city }}</p>
+<p><strong>Date:</strong> {{ journey.trip_date }}</p>
+<p>{{ journey.description }}</p>
+
+<hr>
+
+<h3>Nearby Emergency Services</h3>
+
+<a href="?action=city">
+    <button type="button">Services for Trip City</button>
+</a>
+
+<button type="button" onclick="fetchCurrentLocation()">
+    Services Near My Current Location
+</button>
+
+<br><br>
+{% if weather_data %}
+    <div style="background-color: #e3f2fd; border-left: 5px solid #007bff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h4 style="margin-top: 0; color: #0056b3;">🌤️ Live Weather at this Location</h4>
+        <strong>Temperature:</strong> {{ weather_data.temperature }} °C <br>
+        <strong>Wind Speed:</strong> {{ weather_data.windspeed }} km/h <br>
+        <small style="color: gray;"><em>Data securely routed via Open-Meteo Backend Integration</em></small>
+    </div>
+{% endif %}
+
+<div id="services-list">
+
+<div id="services-list">
+    {% if emergency_services is not None %}
+        {% if emergency_services %}
+            {% for service in emergency_services %}
+                <div class="service-card">
+                    <strong>
+                        {% if service.service_type.name == 'Hospital' %}
+                        {% elif service.service_type.name == 'Police Station' %}
+                        {% elif service.service_type.name == 'Pharmacy' %}
+                        {% elif service.service_type.name == 'Fire Station' %}
+                        {% else %}{% endif %}
+                        {{ service.name }}
+                    </strong><br>
+                    <span class="service-type">{{ service.service_type.name }}</span><br>
+                    <small><b>Address:</b> {{ service.address }}</small><br>
+                    <small><b>Phone:</b> {{ service.phone|default:"Not listed" }}</small>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No emergency services found for this location.</p>
+        {% endif %}
+    {% else %}
+        <p style="color: gray; font-style: italic;">Click a button above to load emergency services.</p>
+    {% endif %}
+</div>
+
+<a href="{% url 'journey_list' %}" class="back-link">← Back to Journeys</a>
+
+<script>
+function fetchCurrentLocation() {
+    const container = document.getElementById("services-list");
+    container.innerHTML = "<p>Asking for location permission...</p>";
+
+    if (!navigator.geolocation) {
+        container.innerHTML = "<p>Geolocation is not supported by your browser.</p>";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            container.innerHTML = "<p>Location found! Fetching data securely from server...</p>";
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // Reload the page with the coordinates so Python can safely make the API call
+            window.location.href = `?lat=${lat}&lon=${lon}`;
+        },
+        () => {
+            container.innerHTML = "<p>Location access denied. Please allow location permissions to use this feature.</p>";
+        }
+    );
+}
+</script>
+
+</body>
+</html>

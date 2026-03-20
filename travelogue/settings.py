@@ -25,9 +25,10 @@ SECRET_KEY = 'django-insecure-8#bq@m29zx0j0$s#c9o@pwfw8&l$nn5ozl(j5^735h=3e2(&6x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
-
+APPOINTMENT_API_BASE = "http://api-env.eba-45cakfm9.us-east-1.elasticbeanstalk.com"
+APPOINTMENT_API_KEY = "e7637b60-73c9-4406-9948-9e5d8154b918"
 # Application definition
 
 INSTALLED_APPS = [

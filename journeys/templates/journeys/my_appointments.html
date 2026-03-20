@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Appointments</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background-color: #f4f4f9; }
+        .appt-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #28a745; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .appt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .status { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .back-link { display: block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;}
+        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
+        .success { background-color: #28a745; }
+    </style>
+</head>
+<body>
+
+<h2>My Booked Consultations</h2>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<p>These appointments are managed securely by our planning service.</p>
+
+{% if appointments %}
+    {% for appt in appointments %}
+        <div class="appt-card">
+            <div class="appt-header">
+                <h3 style="margin: 0;">Consultation #{{ appt.slot_id }}</h3>
+                <span class="status">CONFIRMED</span>
+            </div>
+            <p style="margin: 5px 0;"><strong>Provider:</strong> Travel Expert</p>
+            <p style="margin: 5px 0;"><strong>Date:</strong> {{ appt.date }}</p>
+            <p style="margin: 5px 0;"><strong>Time:</strong> {{ appt.time }}</p>
+        </div>
+    {% endfor %}
+{% else %}
+    <div style="text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #ddd;">
+        <p>You have no upcoming consultations.</p>
+        <a href="{% url 'available_consultations' %}" style="color: #007bff; font-weight: bold;">Book your first session here</a>
+    </div>
+{% endif %}
+
+<a href="{% url 'journey_list' %}" class="back-link">← Back to Dashboard</a>
+
+</body>
+</html>
