@@ -16,7 +16,7 @@ jobs:
       - name: Create ZIP deployment package
         # Zips the Django app AND includes the SQLite database
         run: |
-          zip -r ../deploy.zip . -x "*/__pycache__/*"
+          run: zip -r deploy.zip . -x "*.git*" ".github*"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
