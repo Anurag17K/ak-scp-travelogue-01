@@ -1,34 +1,56 @@
-# Python
+# ========================
+# Python Core
+# ========================
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
 
-# Virtual environment
+# ========================
+# Virtual Environments
+# ========================
 venv/
 env/
 .venv/
 themevenv/
+venvtrips/       # Added your specific travelogue environment
 
-# Django
+# ========================
+# Django & Databases
+# ========================
 db.sqlite3
+db.sqlite3-journal # Catches temporary SQLite lock files
 *.log
 staticfiles/
 media/
 
-# Environment variables
+# ========================
+# Security & Environment
+# ========================
 .env
+.env.* # Catches any local backup env files
 
-# OS files
-.DS_Store
-Thumbs.db
+# ========================
+# CI/CD & Deployment
+# ========================
+deploy.zip       # Prevents pushing the local zip artifact to GitHub
 
-# VS Code
-.vscode/
-
-# Elastic Beanstalk
+# ========================
+# AWS Elastic Beanstalk
+# ========================
 .elasticbeanstalk/*
 !.elasticbeanstalk/config.yml
 
-# Cloud9
+# ========================
+# IDE & OS Files
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
 .c9/
+.idea/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
