@@ -14,12 +14,13 @@ venv/
 env/
 .venv/
 themevenv/
-venvtrips/       # Added your specific travelogue environment
+venvtrips/       # Your specific travelogue environment
 
 # ========================
 # Django & Databases
 # ========================
- # Catches temporary SQLite lock files
+# NOTE: db.sqlite3 is INTENTIONALLY NOT IGNORED so it pushes to GitHub & AWS
+db.sqlite3-journal # Catches temporary SQLite lock files
 *.log
 staticfiles/
 media/
@@ -39,6 +40,8 @@ deploy.zip       # Prevents pushing the local zip artifact to GitHub
 # AWS Elastic Beanstalk
 # ========================
 .elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
 !.elasticbeanstalk/config.yml
 
 # ========================
@@ -49,7 +52,3 @@ Thumbs.db
 .vscode/
 .c9/
 .idea/
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml

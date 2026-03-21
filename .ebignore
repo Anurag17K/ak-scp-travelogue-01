@@ -3,8 +3,8 @@ venvtrips/
 venv/
 env/
 
-# 2. Local Database (Do not overwrite the cloud database!)
-
+# 2. Local Database 
+# (Intentionally left blank so db.sqlite3 uploads to the AWS server)
 
 # 3. Git & CI/CD Folders
 .git/
