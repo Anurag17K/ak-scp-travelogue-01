@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Tell Django it is safely behind a Cloudflare HTTPS proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Ensure cross-site request forgery (CSRF) tokens work through the proxy
+CSRF_TRUSTED_ORIGINS = ['https://travelogue.anuragktech.me']
+
 APPOINTMENT_API_BASE = "http://api-env.eba-45cakfm9.us-east-1.elasticbeanstalk.com"
 APPOINTMENT_API_KEY = "e7637b60-73c9-4406-9948-9e5d8154b918"
 # Application definition
