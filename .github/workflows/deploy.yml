@@ -14,10 +14,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create ZIP deployment package
-        # Dives into the nested folder and zips the Django appsss
+        # Zips the Django app AND includes the SQLite database
         run: |
           cd travelogue 
-          zip -r ../deploy.zip . -x "db.sqlite3" "*/__pycache__/*"
+          zip -r ../deploy.zip . -x "*/__pycache__/*"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
@@ -25,8 +25,8 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
-          application_name: travelogue-app
-          environment_name: travelogue-ebs-env
+          application_name: travelogue
+          environment_name: travelogue-env1  # Make sure this matches your active AWS environment!
           version_label: "travelogue-${{ github.sha }}"
           region: us-east-1
           deployment_package: deploy.zip
