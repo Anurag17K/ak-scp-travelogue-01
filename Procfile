@@ -1,0 +1,1 @@
+web: gunicorn travelogue.wsgi:application --workers 3

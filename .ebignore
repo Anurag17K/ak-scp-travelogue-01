@@ -1,0 +1,30 @@
+# 1. Virtual Environments (Crucial to ignore!)
+venvtrips/
+venv/
+env/
+
+# 2. Local Database (Do not overwrite the cloud database!)
+db.sqlite3
+
+# 3. Git & CI/CD Folders
+.git/
+.gitignore
+.github/
+
+# 4. Python Cache Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 5. Environment Variables (Keep secrets local)
+.env
+
+# 6. IDE and OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 7. The Deployment Zip (If generated locally)
+deploy.zip
