@@ -19,8 +19,7 @@ venvtrips/       # Added your specific travelogue environment
 # ========================
 # Django & Databases
 # ========================
-db.sqlite3
-db.sqlite3-journal # Catches temporary SQLite lock files
+ # Catches temporary SQLite lock files
 *.log
 staticfiles/
 media/
