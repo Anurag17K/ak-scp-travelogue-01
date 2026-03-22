@@ -15,5 +15,5 @@ urlpatterns = [
     path('consultations/mine/', views.my_appointments, name='my_appointments'),
     path('expenses/', views.expense_tracker, name='expense_tracker'),
     path('expenses/add/', views.expense_add, name='expense_add'),
-    path('expenses/delete/<str:expense_id>/', views.expense_delete, name='expense_delete'),
+    path('expenses/delete/<str:expense_date>/', views.expense_delete, name='expense_delete'),
 ]

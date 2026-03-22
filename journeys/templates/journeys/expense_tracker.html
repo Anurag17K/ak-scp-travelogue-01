@@ -64,7 +64,7 @@
                     <td class="align-middle">{{ expense.category }}</td>
                     <td class="align-middle">${{ expense.amount }}</td>
                     <td class="align-middle">
-                        <form action="{% url 'expense_delete' expense.expenseId|default:expense.id %}" method="POST" style="display:inline;">
+                        <form action="{% url 'expense_delete' expense.expenseDate %}" method="POST" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>

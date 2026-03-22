@@ -293,22 +293,22 @@ def expense_add(request):
     return redirect('expense_tracker')
 
 @login_required
-def expense_delete(request, expense_id):
-    """Handles deleting an expense."""
+def expense_delete(request, expense_date):
+    """Handles deleting an expense using the required API payload."""
     if request.method == 'POST':
-        # Assuming the API requires userId and expenseId to delete
+        # Matching the exact payload the API expects
         payload = {
             "userId": request.user.username,
-            "expenseId": expense_id
+            "expenseDate": expense_date
         }
+        
         try:
-            # Note: APIs sometimes expect the ID in the URL instead of the body: f"{EXPENSE_API_BASE}/expense/{expense_id}"
-            # Adjust according to your exact API schema.
             response = requests.delete(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
+            
             if response.status_code == 200:
-                messages.success(request, "Expense deleted.")
+                messages.success(request, f"Expense from {expense_date} deleted.")
             else:
-                messages.error(request, "Failed to delete expense.")
+                messages.error(request, f"Failed to delete: {response.text}")
         except Exception as e:
             messages.error(request, "API Connection Error.")
             
