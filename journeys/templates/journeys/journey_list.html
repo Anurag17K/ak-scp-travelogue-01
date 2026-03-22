@@ -21,6 +21,9 @@
 
 <div class="header">
     <h1>Personal Journey Journal</h1>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'expense_tracker' %}">Expense Tracker</a>
+    </li>
     <div>
         <span>Logged in as: <strong>{{ request.user.username }}</strong></span>
         <form action="{% url 'logout' %}" method="post" style="display:inline;">
