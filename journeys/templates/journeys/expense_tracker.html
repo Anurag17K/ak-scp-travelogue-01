@@ -1,0 +1,61 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+    <h2>Trip Expense Tracker</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>Summary</h4>
+            <p><strong>Total Spent:</strong> ${{ summary.total|default:"0.00" }}</p>
+            </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4>Add New Expense</h4>
+            <form action="{% url 'expense_add' %}" method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="number" step="0.01" name="amount" class="form-control" placeholder="Amount ($)" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" name="description" class="form-control" placeholder="Description (e.g., Dinner)" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4>Recent Expenses</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.description }}</td>
+                <td>${{ expense.amount }}</td>
+                <td>
+                    <form action="{% url 'expense_delete' expense.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No expenses logged yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

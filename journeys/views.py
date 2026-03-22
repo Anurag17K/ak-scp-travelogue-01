@@ -14,6 +14,7 @@ EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
 APPOINTMENT_API_BASE = "http://api-env.eba-45cakfm9.us-east-1.elasticbeanstalk.com"
 APPOINTMENT_API_KEY = "e7637b60-73c9-4406-9948-9e5d8154b918"
 DEFAULT_PROVIDER_ID = 4  # Provider ID 
+EXPENSE_API_BASE = "https://7xig37y0fj.execute-api.us-east-1.amazonaws.com/prod"
 
 geolocator = Nominatim(user_agent="travelogue")
 
@@ -232,3 +233,81 @@ def signup(request):
     else:
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+@login_required
+def expense_tracker(request):
+    """Fetches the user's expense summary and list of expenses."""
+    user_id = request.user.username  # Using Django username as API userId
+    
+    summary_data = {}
+    expenses_data = []
+    
+    # 1. Fetch Summary
+    try:
+        res_summary = requests.get(f"{EXPENSE_API_BASE}/summary", params={"userId": user_id}, timeout=5)
+        if res_summary.status_code == 200:
+            summary_data = res_summary.json()
+    except Exception as e:
+        print(f"Summary API Error: {e}")
+        messages.error(request, "Could not load expense summary.")
+
+    # 2. Fetch Expenses List
+    try:
+        res_expenses = requests.get(f"{EXPENSE_API_BASE}/expense", params={"userId": user_id}, timeout=5)
+        if res_expenses.status_code == 200:
+            # Assuming the API returns a list or a dict with an 'expenses' key
+            data = res_expenses.json()
+            expenses_data = data.get('expenses', data) if isinstance(data, dict) else data
+    except Exception as e:
+        print(f"Expense API Error: {e}")
+        messages.error(request, "Could not load expenses list.")
+
+    return render(request, 'journeys/expense_tracker.html', {
+        'summary': summary_data,
+        'expenses': expenses_data
+    })
+
+@login_required
+def expense_add(request):
+    """Handles adding a new expense via POST request."""
+    if request.method == 'POST':
+        payload = {
+            "userId": request.user.username,
+            "amount": request.POST.get('amount'),
+            "description": request.POST.get('description'),
+            "category": request.POST.get('category', 'General')
+        }
+        
+        try:
+            response = requests.post(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
+            if response.status_code in [200, 201]:
+                messages.success(request, "Expense added successfully!")
+            else:
+                messages.error(request, "Failed to add expense. Please try again.")
+        except Exception as e:
+            print(f"Add Expense Error: {e}")
+            messages.error(request, "API Connection Error.")
+            
+    return redirect('expense_tracker')
+
+@login_required
+def expense_delete(request, expense_id):
+    """Handles deleting an expense."""
+    if request.method == 'POST':
+        # Assuming the API requires userId and expenseId to delete
+        payload = {
+            "userId": request.user.username,
+            "expenseId": expense_id
+        }
+        try:
+            # Note: APIs sometimes expect the ID in the URL instead of the body: f"{EXPENSE_API_BASE}/expense/{expense_id}"
+            # Adjust according to your exact API schema.
+            response = requests.delete(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
+            if response.status_code == 200:
+                messages.success(request, "Expense deleted.")
+            else:
+                messages.error(request, "Failed to delete expense.")
+        except Exception as e:
+            messages.error(request, "API Connection Error.")
+            
+    return redirect('expense_tracker')

@@ -13,4 +13,7 @@ urlpatterns = [
     path('consultations/', views.available_consultations, name='available_consultations'),
     path('consultations/book/<int:slot_id>/', views.book_consultation, name='book_consultation'),
     path('consultations/mine/', views.my_appointments, name='my_appointments'),
+    path('expenses/', views.expense_tracker, name='expense_tracker'),
+    path('expenses/add/', views.expense_add, name='expense_add'),
+    path('expenses/delete/<str:expense_id>/', views.expense_delete, name='expense_delete'),
 ]
