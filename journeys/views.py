@@ -8,6 +8,7 @@ from django import forms
 from django.contrib import messages
 from .models import Journey
 from geopy.geocoders import Nominatim
+from datetime import date
 
 # --- CONFIGURATION ---
 EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
@@ -269,24 +270,25 @@ def expense_tracker(request):
 
 @login_required
 def expense_add(request):
-    """Handles adding a new expense via POST request."""
+    """Handles adding a new expense matching the specific API payload."""
     if request.method == 'POST':
+        # Match the exact payload structure from the Network tab
         payload = {
             "userId": request.user.username,
-            "amount": request.POST.get('amount'),
-            "description": request.POST.get('description'),
-            "category": request.POST.get('category', 'General')
+            "expenseDate": request.POST.get('expenseDate', str(date.today())), # Grabs date from form, or defaults to today
+            "category": request.POST.get('category'), 
+            "amount": str(request.POST.get('amount')) # API expects this as a string
         }
         
         try:
             response = requests.post(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
+            
             if response.status_code in [200, 201]:
                 messages.success(request, "Expense added successfully!")
             else:
-                messages.error(request, "Failed to add expense. Please try again.")
+                messages.error(request, f"API Rejected: {response.text}")
         except Exception as e:
-            print(f"Add Expense Error: {e}")
-            messages.error(request, "API Connection Error.")
+            messages.error(request, f"Connection Error: {str(e)}")
             
     return redirect('expense_tracker')
 
