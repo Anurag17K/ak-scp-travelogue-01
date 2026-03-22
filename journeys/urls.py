@@ -16,4 +16,5 @@ urlpatterns = [
     path('expenses/', views.expense_tracker, name='expense_tracker'),
     path('expenses/add/', views.expense_add, name='expense_add'),
     path('expenses/delete/<str:expense_date>/', views.expense_delete, name='expense_delete'),
+    path('surprise-me/', views.surprise_me, name='surprise_me'),
 ]

@@ -313,3 +313,39 @@ def expense_delete(request, expense_date):
             messages.error(request, "API Connection Error.")
             
     return redirect('expense_tracker')
+    
+@login_required
+def surprise_me(request):
+    """Fetches random trip suggestions from the generator API."""
+    suggested_trips = []
+    
+    # 1. The payload asking for 3 random trips
+    schema = {
+        "type": "trip", 
+        "count": 3
+    }
+    
+    try:
+        # 2. Call the API dynamically
+        response = requests.post("https://mock-data-api-fk0f.onrender.com/generate/", json=schema, timeout=10)
+        
+        if response.status_code == 200:
+            api_data = response.json().get('data', [])
+            
+            # 3. Clean up the data for the HTML template
+            for item in api_data:
+                suggested_trips.append({
+                    'title': item.get('title', 'Mystery Adventure'),
+                    'city': item.get('location', 'Unknown City'),
+                    'description': item.get('description', 'A wonderful surprise journey awaits!'),
+                    'date': item.get('date', str(date.today()))
+                })
+        else:
+            messages.error(request, "Our inspiration engine is currently taking a nap.")
+            
+    except Exception as e:
+        print(f"Inspiration API Error: {e}")
+        messages.error(request, "Could not connect to the trip generator.")
+
+    # 4. Send the data to a new template
+    return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
