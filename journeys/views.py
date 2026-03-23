@@ -326,40 +326,43 @@ FALLBACK_TRIPS = [
 def surprise_me(request):
     suggested_trips = []
 
-    # 1. THE SCHEMA (The Variable Order)
-    # This is the 'Contract' between the Trip App and your Generator
+    # 1. THE NEW SCHEMA (The Faker Template)
+    # We are now telling the API exactly which Faker functions to run!
     schema = {
-        "type": "airbnb_listing", # Updated to the valid API type we tested
         "count": 3,
-        "requirements": ["title", "location", "description"] 
+        "title": "catch_phrase",     
+        "location": "city",          
+        "description": "paragraph",  
+        "date": "date_this_year"     
     }
 
     try:
-        # 2. THE REQUEST (With a longer timeout for Render 'Cold Starts')
-        # We increase to 20s because Render free tier needs time to wake up.
         response = requests.post(
             "https://mock-data-api-fk0f.onrender.com/generate/", 
             json=schema, 
             timeout=20 
         )
-        response.raise_for_status() # Automatically triggers the 'except' if 404/500
+        response.raise_for_status()
 
+        # The API likely returns {"data": [{...}, {...}, {...}]} based on your friend's original code
         api_data = response.json().get('data', [])
+        
+        # If the API just returns a raw list, use this fallback:
+        if not api_data and isinstance(response.json(), list):
+            api_data = response.json()
 
-        # 3. THE MAPPING (The Translation Layer)
-        # This is where the 'Universal' data becomes 'Specific' Trip data
+        # 3. THE MAPPING
         for item in api_data:
             suggested_trips.append({
-                'title': item.get('title', 'Mystery Adventure'),
-                'city': item.get('location', item.get('city', 'Discovery Point')),
+                'title': item.get('title', 'Mystery Adventure').title(), # .title() capitalizes it nicely
+                'city': item.get('location', 'Discovery Point'),
                 'description': item.get('description', 'Pack your bags for a surprise!'),
                 'date': item.get('date', str(date.today()))
             })
 
-    except (requests.exceptions.RequestException, ValueError) as e:
-        print(f"Inspiration API Error: {e}") # Helpful for checking your AWS logs
-        # 4. THE FALLBACK (The 'Plan B')
-        # Instead of an empty page, give them something to look at.
+    except Exception as e:
+        print(f"Inspiration API Error: {e}")
+        # 4. THE FALLBACK 
         suggested_trips = FALLBACK_TRIPS
         messages.warning(request, "Using saved inspiration while our engine warms up.")
 
