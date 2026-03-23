@@ -8,7 +8,6 @@ from django import forms
 from django.contrib import messages
 from .models import Journey
 from geopy.geocoders import Nominatim
-from datetime import date
 
 # --- CONFIGURATION ---
 EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
@@ -314,33 +313,54 @@ def expense_delete(request, expense_date):
             
     return redirect('expense_tracker')
     
+FALLBACK_TRIPS = [
+    {
+        'title': 'Local Hidden Gem', 
+        'city': 'Nearby Town', 
+        'description': 'A beautiful spot right in your backyard!',
+        'date': str(date.today()) # Added to prevent HTML template errors
+    }
+]
+
 @login_required
 def surprise_me(request):
     suggested_trips = []
-    schema = {"type": "trip", "count": 3}
-    
-    try:
-        response = requests.post("https://mock-data-api-fk0f.onrender.com/generate/", json=schema, timeout=10)
-        
-        if response.status_code == 200:
-            api_data = response.json().get('data', [])
-            
-            # --- ADD THIS DEBUG LINE ---
-            if api_data:
-                messages.info(request, f"RAW API DATA: {api_data[0]}")
-            # ---------------------------
 
-            for item in api_data:
-                suggested_trips.append({
-                    'title': item.get('title', 'Mystery Adventure'),
-                    'city': item.get('location', 'Unknown City'),
-                    'description': item.get('description', 'A wonderful surprise journey awaits!'),
-                    'date': item.get('date', str(date.today()))
-                })
-        else:
-            messages.error(request, "Our inspiration engine is currently taking a nap.")
-            
-    except Exception as e:
-        messages.error(request, "Could not connect to the trip generator.")
+    # 1. THE SCHEMA (The Variable Order)
+    # This is the 'Contract' between the Trip App and your Generator
+    schema = {
+        "type": "airbnb_listing", # Updated to the valid API type we tested
+        "count": 3,
+        "requirements": ["title", "location", "description"] 
+    }
+
+    try:
+        # 2. THE REQUEST (With a longer timeout for Render 'Cold Starts')
+        # We increase to 20s because Render free tier needs time to wake up.
+        response = requests.post(
+            "https://mock-data-api-fk0f.onrender.com/generate/", 
+            json=schema, 
+            timeout=20 
+        )
+        response.raise_for_status() # Automatically triggers the 'except' if 404/500
+
+        api_data = response.json().get('data', [])
+
+        # 3. THE MAPPING (The Translation Layer)
+        # This is where the 'Universal' data becomes 'Specific' Trip data
+        for item in api_data:
+            suggested_trips.append({
+                'title': item.get('title', 'Mystery Adventure'),
+                'city': item.get('location', item.get('city', 'Discovery Point')),
+                'description': item.get('description', 'Pack your bags for a surprise!'),
+                'date': item.get('date', str(date.today()))
+            })
+
+    except (requests.exceptions.RequestException, ValueError) as e:
+        print(f"Inspiration API Error: {e}") # Helpful for checking your AWS logs
+        # 4. THE FALLBACK (The 'Plan B')
+        # Instead of an empty page, give them something to look at.
+        suggested_trips = FALLBACK_TRIPS
+        messages.warning(request, "Using saved inspiration while our engine warms up.")
 
     return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
