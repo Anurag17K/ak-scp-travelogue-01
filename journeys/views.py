@@ -8,6 +8,7 @@ from django import forms
 from django.contrib import messages
 from .models import Journey
 from geopy.geocoders import Nominatim
+import random
 
 # --- CONFIGURATION ---
 EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
@@ -326,15 +327,22 @@ FALLBACK_TRIPS = [
 def surprise_me(request):
     suggested_trips = []
 
-    # 1. THE NEW SCHEMA (The Faker Template)
-    # We are now telling the API exactly which Faker functions to run!
+    # 1. THE REFINED SCHEMA 
+    # Only ask Faker for places and dates. We will handle the creative writing!
     schema = {
         "count": 3,
-        "title": "catch_phrase",     
-        "location": "city",          
-        "description": "paragraph",  
+        "city": "city",          
+        "country": "country",          
         "date": "date_this_year"     
     }
+
+    # 2. OUR CUSTOM DESCRIPTIONS
+    # These sound much better than Faker's random gibberish
+    travel_descriptions = [
+        "A perfect getaway to capture some stunning photography. Explore the hidden streets and rich local culture.",
+        "Immerse yourself in breathtaking landscapes. Make sure to bring your camera for this incredible adventure!",
+        "From historical landmarks to vibrant local life, this destination offers endless opportunities to explore and unwind."
+    ]
 
     try:
         response = requests.post(
@@ -344,25 +352,24 @@ def surprise_me(request):
         )
         response.raise_for_status()
 
-        # The API likely returns {"data": [{...}, {...}, {...}]} based on your friend's original code
         api_data = response.json().get('data', [])
-        
-        # If the API just returns a raw list, use this fallback:
         if not api_data and isinstance(response.json(), list):
             api_data = response.json()
 
-        # 3. THE MAPPING
+        # 3. THE MAPPING (Injecting the API data into our templates)
         for item in api_data:
+            city_name = item.get('city', 'Discovery Point')
+            country_name = item.get('country', 'Unknown')
+            
             suggested_trips.append({
-                'title': item.get('title', 'Mystery Adventure').title(), # .title() capitalizes it nicely
-                'city': item.get('location', 'Discovery Point'),
-                'description': item.get('description', 'Pack your bags for a surprise!'),
+                'title': f"Expedition to {city_name}", # Dynamically builds a nice title
+                'city': f"{city_name}, {country_name}", # Combines City and Country
+                'description': random.choice(travel_descriptions), # Picks a random good description
                 'date': item.get('date', str(date.today()))
             })
 
     except Exception as e:
         print(f"Inspiration API Error: {e}")
-        # 4. THE FALLBACK 
         suggested_trips = FALLBACK_TRIPS
         messages.warning(request, "Using saved inspiration while our engine warms up.")
 
