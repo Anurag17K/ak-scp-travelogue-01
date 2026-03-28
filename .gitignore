@@ -52,3 +52,7 @@ Thumbs.db
 .vscode/
 .c9/
 .idea/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,10 +81,21 @@ WSGI_APPLICATION = 'travelogue.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
+        'USER': os.environ.get('DB_USER', 'adminuser'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
+        'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 

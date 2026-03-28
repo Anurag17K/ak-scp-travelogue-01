@@ -1,11 +1,11 @@
 branch-defaults:
   main:
-    environment: travelogue-env
+    environment: travelogue-env-01
     group_suffix: null
 global:
   application_name: travelogue
   branch: null
-  default_ec2_keyname: vockey
+  default_ec2_keyname: master-project-key
   default_platform: Python 3.12 running on 64bit Amazon Linux 2023
   default_region: us-east-1
   include_git_submodules: true
