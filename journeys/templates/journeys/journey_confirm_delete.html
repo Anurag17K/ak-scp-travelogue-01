@@ -1,18 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Delete Journey</title>
+    <title>Confirm Deletion</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; max-width: 500px; 
+            margin: 0 auto; padding: 80px 20px; background-color: #fffafb; 
+        }
+
+        .delete-card { 
+            background: #ffffff; border: 1px solid #fee2e2; padding: 40px; 
+            border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h2 { font-weight: 900; color: #1e293b; margin-top: 0; }
+        .warning-text { 
+            color: #dc2626; font-weight: 800; margin: 20px 0; 
+            background: #fef2f2; padding: 10px; border-radius: 8px; font-size: 0.9em;
+        }
+
+        .action-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
+
+        .btn { 
+            padding: 12px 24px; border: none; border-radius: 10px; 
+            cursor: pointer; font-size: 14px; font-weight: 800; text-decoration: none; transition: 0.2s;
+        }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #991b1b; transform: scale(1.02); }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+        .btn-cancel:hover { background: #e2e8f0; }
+    </style>
 </head>
 <body>
 
-<h2>Delete "{{ journey.title }}"?</h2>
+<div class="delete-card">
+    <h2>Delete Journey?</h2>
+    <p>Are you sure you want to remove <strong>"{{ journey.title }}"</strong>?</p>
+    <p class="warning-text">⚠️ THIS ACTION CANNOT BE UNDONE</p>
 
-<form method="POST">
-    {% csrf_token %}
-    <button type="submit">Yes, Delete</button>
-</form>
-
-<a href="{% url 'journey_list' %}">Cancel</a>
+    <form method="POST" class="action-buttons">
+        {% csrf_token %}
+        <a href="{% url 'journey_list' %}" class="btn btn-cancel">Cancel</a>
+        <button type="submit" class="btn btn-danger">Confirm Delete</button>
+    </form>
+</div>
 
 </body>
 </html>

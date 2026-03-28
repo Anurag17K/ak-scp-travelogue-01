@@ -1,66 +1,173 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Journey Journal</title>
+    <title>Travelogue | My Timeline</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; color: #333333; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .nav-links { margin-bottom: 20px; }
-        .nav-links a { margin-right: 15px; padding: 8px 12px; background: #fff; border: 1px solid #007bff; border-radius: 5px; text-decoration: none; color: #007bff; font-weight: bold; }
-        .nav-links a:hover { background: #007bff; color: #fff; }
-        .card { padding: 20px; margin: 15px 0; border-radius: 10px; background-color: #ffffff; border-left: 5px solid #007bff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
-        .success { background-color: #28a745; }
-        .error { background-color: #dc3545; }
-        button { padding: 6px 12px; margin-right: 5px; cursor: pointer; background-color: #007bff; color: #ffffff; border: none; border-radius: 6px; }
-        button:hover { background-color: #0056b3; }
-        a.action { margin-right: 10px; color: #007bff; font-weight: bold; text-decoration: none; }
+        /* Sunset Orange Travelogue Aesthetic */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #fffafb; /* Very slight warm tint */
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            padding: 15px 5%;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar-brand { margin: 0; color: #f97316; font-size: 26px; font-weight: 900; letter-spacing: -1px;}
+        .user-menu { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 20px; color: #475569; }
+        
+        .btn-logout { 
+            background: #fef2f2; border: 1px solid #fee2e2; color: #991b1b; padding: 6px 14px; 
+            border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s;
+        }
+        .btn-logout:hover { background: #991b1b; color: white; }
+
+        .container { max-width: 850px; margin: 40px auto; padding: 0 20px; }
+
+        /* Floating Toolbar */
+        .toolbar { 
+            display: flex; gap: 12px; margin-bottom: 50px; flex-wrap: wrap; 
+            background: #ffffff; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); justify-content: center;
+        }
+        .btn { 
+            padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; 
+            font-size: 14px; font-weight: 700; text-decoration: none; transition: 0.2s;
+        }
+        
+        /* Vibrant Orange Primary */
+        .btn-primary { background: #f97316; color: white; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3); }
+        .btn-primary:hover { background: #ea580c; transform: translateY(-1px); }
+        
+        .btn-secondary { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover { background: #fff7ed; color: #f97316; border-color: #fdba74; }
+
+        /* --- THE TIMELINE --- */
+        .timeline {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 60px;
+        }
+        /* The central line */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 18px;
+            width: 4px;
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .timeline-item { position: relative; margin-bottom: 50px; }
+        
+        /* The Vibrant Orange Node */
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -43px;
+            top: 24px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border: 5px solid #f97316; 
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px #fffafb;
+            z-index: 1;
+        }
+
+        .card { 
+            background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; 
+            padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover { border-color: #fdba74; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #f8fafc; padding-bottom: 15px;}
+        .card-title { margin: 0; font-size: 22px; color: #0f172a; font-weight: 800;}
+        
+        /* Peach Date Badge */
+        .card-date { font-weight: 800; color: #ea580c; font-size: 13px; background: #fff7ed; padding: 6px 14px; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .card-location { font-size: 16px; font-weight: 700; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
+        .card-desc { color: #475569; font-size: 15px; margin: 0 0 25px 0; line-height: 1.7; }
+        
+        .card-actions { display: flex; gap: 12px; }
+        .btn-action { padding: 10px 18px; font-size: 13px; border-radius: 8px; text-decoration: none; font-weight: 700; transition: 0.2s; }
+        
+        .btn-manage { background: #1e293b; color: white; }
+        .btn-manage:hover { background: #0f172a; }
+        
+        .btn-edit { background: #f1f5f9; color: #475569; }
+        .btn-edit:hover { background: #e2e8f0; }
+        
+        .btn-delete { background: #fff; color: #ef4444; border: 1px solid #fee2e2; }
+        .btn-delete:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+        .alert { padding: 15px 25px; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; border-radius: 12px; margin-bottom: 30px; font-weight: 700;}
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>Personal Journey Journal</h1>
-    <li class="nav-item">
-        <a class="nav-link" href="{% url 'expense_tracker' %}">Expense Tracker></a>
-    </li>
-    <a href="{% url 'surprise_me' %}" class="btn btn-warning shadow-sm">
-    Feeling Lucky???
-    </a>
-    <div>
-        <span>Logged in as: <strong>{{ request.user.username }}</strong></span>
+<div class="navbar">
+    <h1 class="navbar-brand">TRAVELOGUE</h1>
+    <div class="user-menu">
+        <span>EXPLORER: <strong>{{ request.user.username }}</strong></span>
         <form action="{% url 'logout' %}" method="post" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" class="btn-logout">Exit Session</button>
         </form>
     </div>
 </div>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
+<div class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
-<div class="nav-links">
-    <a href="{% url 'journey_create' %}">+ Add New Journey</a>
-    <a href="{% url 'available_consultations' %}"> > Book a Consultation</a>
-    <a href="{% url 'my_appointments' %}"> > My Bookings</a>
-</div>
-
-{% for journey in journeys %}
-    <div class="card">
-        <h2>{{ journey.title }}</h2>
-        <p><strong>Date:</strong> {{ journey.trip_date }}</p>
-        <p><strong>City:</strong> {{ journey.city }}</p>
-        <p>{{ journey.description }}</p>
-        <a class="action" href="{% url 'journey_detail' journey.id %}">View</a>
-        <a class="action" href="{% url 'journey_update' journey.id %}">Edit</a>
-        <a class="action" href="{% url 'journey_delete' journey.id %}">Delete</a>
+    <div class="toolbar">
+        <a href="{% url 'journey_create' %}" class="btn btn-primary">⚡ Plan New Trip</a>
+        <a href="{% url 'expense_tracker' %}" class="btn btn-secondary">Expense Ledger</a>
+        <a href="{% url 'available_consultations' %}" class="btn btn-secondary">Expert Booking</a>
+        <a href="{% url 'surprise_me' %}" class="btn btn-secondary">Trip Inspiration</a>
     </div>
-{% empty %}
-    <p>No journeys added yet.</p>
-{% endfor %}
+
+    <div class="timeline">
+        {% for journey in journeys %}
+            <div class="timeline-item">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">{{ journey.title }}</h2>
+                        <div class="card-date">{{ journey.trip_date }}</div>
+                    </div>
+                    
+                    <div class="card-location">📍 {{ journey.city }}</div>
+                    <p class="card-desc">{{ journey.description|default:"No description logs found for this entry." }}</p>
+                    
+                    <div class="card-actions">
+                        <a href="{% url 'journey_detail' journey.id %}" class="btn-action btn-manage">Open Dashboard</a>
+                        <a href="{% url 'journey_update' journey.id %}" class="btn-action btn-edit">Modify</a>
+                        <a href="{% url 'journey_delete' journey.id %}" class="btn-action btn-delete">Drop Record</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div style="padding: 60px 20px; background: #ffffff; border: 2px dashed #e2e8f0; border-radius: 20px; text-align: center;">
+                <p style="color: #94a3b8; font-weight: 600;">System Ready. No Journey Records Initialized.</p>
+                <a href="{% url 'journey_create' %}" style="color: #f97316; font-weight: 800; text-decoration: none;">Create your first log →</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 
 </body>
 </html>

@@ -1,59 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Book Consultation</title>
+    <title>Book Consultation | Travelogue</title>
     <style>
-        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background-color: #f4f4f9; }
-        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-        .slot-card { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-        .slot-time { font-size: 1.1em; font-weight: bold; margin-bottom: 10px; display: block; }
-        .book-btn { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; }
-        .book-btn:hover { background: #218838; }
-        .back-link { display: block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;}
-        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
-        .error { background-color: #dc3545; }
-        .filter-form { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            max-width: 900px; margin: 0 auto; padding: 40px 20px; 
+            background-color: #fffafb; color: #1e293b; line-height: 1.6;
+        }
+        
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h2 { font-size: 2.5em; font-weight: 900; color: #1e293b; margin: 0; }
+        .header p { color: #64748b; font-weight: 600; }
+
+        .card { 
+            background: #fff; padding: 30px; border-radius: 20px; 
+            border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.03); 
+            margin-bottom: 30px; 
+        }
+
+        /* Search Bar */
+        .search-form { display: flex; gap: 15px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        label { font-weight: 800; color: #1e293b; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        input[type="date"] { 
+            padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; 
+            font-family: inherit; font-weight: 600; outline: none; transition: 0.2s;
+        }
+        input[type="date"]:focus { border-color: #f97316; }
+        
+        .btn-check { 
+            background: #f97316; color: white; border: none; padding: 12px 25px; 
+            border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s;
+        }
+        .btn-check:hover { background: #ea580c; transform: translateY(-1px); }
+
+        /* Slot Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .slot { 
+            background: #fff; border: 1px solid #e2e8f0; padding: 20px; 
+            border-radius: 16px; text-align: center; transition: 0.2s;
+        }
+        .slot:hover { border-color: #f97316; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.1); }
+        .slot strong { display: block; font-size: 1.2em; font-weight: 900; margin-bottom: 12px; color: #1e293b; }
+        
+        .btn-book { 
+            background: #1e293b; color: white; border: none; padding: 8px 15px; 
+            border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s;
+        }
+        .btn-book:hover { background: #f97316; }
+
+        .back-link { display: inline-block; margin-top: 30px; color: #64748b; text-decoration: none; font-weight: 700;}
     </style>
 </head>
 <body>
 
-<h2>Schedule a Trip Planning Consultation</h2>
+<a href="{% url 'journey_list' %}" class="back-link">← Dashboard</a>
 
-{% if messages %}
-    {% for message in messages %}
-        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
-    {% endfor %}
-{% endif %}
+<div class="header">
+    <h2>Book a Session</h2>
+    <p>Expert travel guidance, scheduled at your convenience.</p>
+</div>
 
-<div class="filter-form">
-    <form method="GET" action="{% url 'available_consultations' %}">
-        <label for="date" style="font-weight: bold;">Select Date:</label>
-        <input type="date" id="date" name="date" value="{{ selected_date }}" style="padding: 5px; margin: 0 10px;">
-        <button type="submit" style="padding: 6px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Check Availability</button>
+<div class="card">
+    <form method="GET" action="{% url 'available_consultations' %}" class="search-form">
+        <label>Pick a Date</label>
+        <input type="date" name="date" value="{{ selected_date }}">
+        <button type="submit" class="btn-check">Check Availability</button>
     </form>
 </div>
 
-<p>Showing available slots for: <strong>{{ selected_date }}</strong></p>
+<h3 style="margin-bottom: 20px; font-weight: 800; color: #475569;">Available Slots: {{ selected_date }}</h3>
 
-<div class="slot-grid">
+<div class="grid">
     {% for slot in slots %}
-        <div class="slot-card">
-            <span class="slot-time">{{ slot.time }}</span>
-            
+        <div class="slot">
+            <strong>{{ slot.time }}</strong>
             <form method="POST" action="{% url 'book_consultation' slot.slot_id %}">
                 {% csrf_token %}
-                <button type="submit" class="book-btn">Book This Slot</button>
+                <button type="submit" class="btn-book">Reserve</button>
             </form>
         </div>
     {% empty %}
-        <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #ddd;">
-            <p>No available slots found for this date.</p>
-            <small>Try selecting a different date from the calendar above.</small>
-        </div>
+        <p style="grid-column: 1/-1; text-align: center; color: #94a3b8; font-weight: 600; padding: 40px;">No available slots for this date.</p>
     {% endfor %}
 </div>
-
-<a href="{% url 'journey_list' %}" class="back-link">← Back to Dashboard</a>
 
 </body>
 </html>

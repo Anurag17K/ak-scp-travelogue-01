@@ -1,31 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add / Edit Journey</title>
+    <title>Journey Record</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; max-width: 600px; 
+            margin: 0 auto; padding: 40px 20px; background-color: #fffafb; 
+        }
+        
+        h2 { font-weight: 900; color: #1e293b; font-size: 2em; margin-bottom: 30px; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #f97316; text-decoration: none; font-weight: 800; }
+        
+        .form-card { 
+            background: #ffffff; border: 1px solid #e2e8f0; padding: 35px; 
+            border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        
+        .form-group { margin-bottom: 25px; }
+        label { display: block; font-weight: 800; margin-bottom: 8px; color: #475569; font-size: 0.85em; text-transform: uppercase; }
+        
+        input[type="text"], input[type="date"], textarea { 
+            width: 100%; padding: 14px; border: 2px solid #f1f5f9; border-radius: 12px; 
+            box-sizing: border-box; font-family: inherit; font-weight: 600; transition: 0.2s;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #f97316; background: #fff; }
+        textarea { height: 140px; resize: vertical; }
+        
+        .btn-submit { 
+            background: #f97316; color: white; border: none; padding: 16px; 
+            cursor: pointer; font-size: 1.1em; width: 100%; font-weight: 900; 
+            border-radius: 12px; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2); transition: 0.2s;
+        }
+        .btn-submit:hover { background: #ea580c; transform: translateY(-2px); }
+    </style>
 </head>
 <body>
 
-<h2>Journey Details</h2>
+<a href="{% url 'journey_list' %}" class="back-link">← Return to Dashboard</a>
 
-<form method="POST">
-    {% csrf_token %}
-
-    <input type="text" name="title" placeholder="Journey Title"
-           value="{{ journey.title|default:'' }}" required><br><br>
-
-    <input type="date" name="trip_date"
-           value="{{ journey.trip_date|default:'' }}" required><br><br>
-
-    <input type="text" name="city" placeholder="City Name"
-           value="{{ journey.city|default:'' }}" required><br><br>
-
-    <textarea name="description" placeholder="Journey Notes">{{ journey.description|default:'' }}</textarea><br><br>
-
-    <button type="submit">Save</button>
-</form>
-
-<br>
-<a href="{% url 'journey_list' %}">Back</a>
+<div class="form-card">
+    <h2>Trip Details</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Journey Title</label>
+            <input type="text" name="title" placeholder="e.g., Summer in Dublin" value="{{ journey.title|default:'' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Trip Date</label>
+            <input type="date" name="trip_date" value="{{ journey.trip_date|default:'' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Destination City</label>
+            <input type="text" name="city" placeholder="e.g., Dublin" value="{{ journey.city|default:'' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Field Notes</label>
+            <textarea name="description" placeholder="Write down your plans or thoughts...">{{ journey.description|default:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn-submit">Save Trip</button>
+    </form>
+</div>
 
 </body>
 </html>

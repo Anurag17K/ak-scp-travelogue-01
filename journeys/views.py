@@ -47,10 +47,14 @@ def journey_create(request):
 
 @login_required
 def journey_detail(request, id):
+    # Ensure user security
     journey = get_object_or_404(Journey, id=id, user=request.user)
-    emergency_services = None 
-    weather_data = None  # NEW: Initialize weather data
     
+    # Initialize variables
+    emergency_services = None 
+    weather_data = None 
+    attractions = None 
+
     action = request.GET.get('action')
     user_lat = request.GET.get('lat')
     user_lon = request.GET.get('lon')
@@ -59,45 +63,46 @@ def journey_detail(request, id):
         target_lat = None
         target_lon = None
 
-        # Determine which coordinates to use
+        # Logic to determine coordinates
         if user_lat and user_lon:
-            params = {"lat": user_lat, "lon": user_lon}
             target_lat, target_lon = user_lat, user_lon
+            params = {"lat": user_lat, "lon": user_lon}
         else:
             if journey.latitude and journey.longitude:
-                params = {"lat": journey.latitude, "lon": journey.longitude}
                 target_lat, target_lon = journey.latitude, journey.longitude
+                params = {"lat": target_lat, "lon": target_lon}
             else:
                 params = {"city": journey.city}
 
-        # 1. Fetch Emergency Services (AWS)
+        # 1. Fetch Emergency Services (AWS API)
         try:
             response = requests.get(EMERGENCY_API_BASE, params=params, timeout=5)
             emergency_services = response.json() if response.status_code == 200 else []
         except requests.exceptions.RequestException:
             emergency_services = []
 
-        # 2. NEW: Fetch Live Weather (Open-Meteo) using the same coordinates
+        # 2. Fetch Weather & Attractions (Requires target_lat/target_lon)
         if target_lat and target_lon:
+            
+            # --- Weather (Open-Meteo) ---
             try:
-                weather_url = "https://api.open-meteo.com/v1/forecast"
-                weather_params = {
-                    "latitude": target_lat,
-                    "longitude": target_lon,
-                    "current_weather": "true" # Tells the API to return the current temp
-                }
-                w_response = requests.get(weather_url, params=weather_params, timeout=3)
-                if w_response.status_code == 200:
-                    # Extract just the current weather dictionary
-                    weather_data = w_response.json().get('current_weather') 
-            except Exception as e:
-                print(f"Weather API Error: {e}")
+                w_url = "https://api.open-meteo.com/v1/forecast"
+                w_params = {"latitude": target_lat, "longitude": target_lon, "current_weather": "true"}
+                w_res = requests.get(w_url, params=w_params, timeout=3)
+                if w_res.status_code == 200:
+                    weather_data = w_res.json().get('current_weather') 
+            except Exception:
                 weather_data = None
+
+            # --- Attractions (OpenTripMap) ---
+            # Using our separate helper function
+            attractions = get_opentripmap_data(target_lat, target_lon)
 
     return render(request, 'journeys/journey_detail.html', {
         'journey': journey,
         'emergency_services': emergency_services,
-        'weather_data': weather_data  # Pass it to the HTML template
+        'weather_data': weather_data,
+        'attractions': attractions,
     })
 
 @login_required
@@ -374,3 +379,33 @@ def surprise_me(request):
         messages.warning(request, "Using saved inspiration while our engine warms up.")
 
     return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
+
+def get_opentripmap_data(lat, lon):
+    """Helper function to fetch tourist spots from OpenTripMap"""
+    # Hard-coded key as requested
+    API_KEY = "5ae2e3f221c38a28845f05b6773a26a8ad52cbaeec0ac46925812047"
+    
+    url = (
+        f"https://api.opentripmap.com/0.1/en/places/radius?"
+        f"radius=5000&lon={lon}&lat={lat}&"
+        f"kinds=interesting_places&format=json&limit=10&apikey={API_KEY}"
+    )
+
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            raw_data = response.json()
+            # Transform the raw API data into a clean list for our HTML
+            return [
+                {
+                    'name': item.get('name'),
+                    'type': item.get('kinds', 'Landmark').split(',')[0].replace('_', ' ').title(),
+                    'lat': item.get('point', {}).get('lat'),
+                    'lon': item.get('point', {}).get('lon')
+                }
+                for item in raw_data if item.get('name')
+            ]
+    except Exception as e:
+        print(f"OpenTripMap Helper Error: {e}")
+    
+    return []

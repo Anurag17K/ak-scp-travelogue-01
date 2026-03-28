@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,23 +82,23 @@ WSGI_APPLICATION = 'travelogue.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
-        'USER': os.environ.get('DB_USER', 'adminuser'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
-        'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
+#         'USER': os.environ.get('DB_USER', 'adminuser'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
+#         'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
+#         'PORT': os.environ.get('DB_PORT', '5432'),
+#     }
+# }
 
 
 # Password validation
@@ -138,3 +139,4 @@ STATIC_URL = 'static/'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

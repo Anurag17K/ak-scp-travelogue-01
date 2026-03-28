@@ -1,49 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Appointments</title>
+    <title>My Appointments | Travelogue</title>
     <style>
-        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background-color: #f4f4f9; }
-        .appt-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #28a745; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .appt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .status { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
-        .back-link { display: block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;}
-        .msg { padding: 10px; margin-bottom: 10px; border-radius: 5px; color: white; }
-        .success { background-color: #28a745; }
+        body { 
+            font-family: system-ui, sans-serif; max-width: 800px; 
+            margin: 0 auto; padding: 40px 20px; background-color: #fffafb; color: #1e293b;
+        }
+        
+        h2 { font-size: 2.2em; font-weight: 900; margin-bottom: 10px; }
+        .subtitle { color: #64748b; font-weight: 600; margin-bottom: 30px; }
+
+        .appt-card { 
+            background: white; padding: 25px; border-radius: 16px; 
+            margin-bottom: 20px; border: 1px solid #e2e8f0; border-left: 6px solid #10b981; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03); 
+        }
+        
+        .appt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .appt-header h3 { margin: 0; font-size: 1.2em; font-weight: 800; color: #1e293b; }
+        
+        .status { 
+            background: #ecfdf5; color: #065f46; padding: 5px 12px; 
+            border-radius: 20px; font-size: 0.75em; font-weight: 800; border: 1px solid #d1fae5;
+        }
+        
+        .appt-details p { margin: 8px 0; font-size: 0.95em; color: #475569; font-weight: 600; }
+        .appt-details strong { color: #1e293b; }
+
+        .back-link { display: inline-block; margin-top: 30px; color: #f97316; text-decoration: none; font-weight: 800;}
+        
+        .msg { padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 700; color: white; background-color: #10b981; text-align: center;}
     </style>
 </head>
 <body>
 
-<h2>My Booked Consultations</h2>
+<a href="{% url 'journey_list' %}" class="back-link">← Dashboard</a>
+
+<h2>My Consultations</h2>
+<p class="subtitle">Securely managed expert travel sessions.</p>
 
 {% if messages %}
     {% for message in messages %}
-        <div class="msg {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        <div class="msg">{{ message }}</div>
     {% endfor %}
 {% endif %}
-
-<p>These appointments are managed securely by our planning service.</p>
 
 {% if appointments %}
     {% for appt in appointments %}
         <div class="appt-card">
             <div class="appt-header">
-                <h3 style="margin: 0;">Consultation #{{ appt.slot_id }}</h3>
-                <span class="status">CONFIRMED</span>
+                <h3>Consultation ID: #{{ appt.slot_id }}</h3>
+                <span class="status">● CONFIRMED</span>
             </div>
-            <p style="margin: 5px 0;"><strong>Provider:</strong> Travel Expert</p>
-            <p style="margin: 5px 0;"><strong>Date:</strong> {{ appt.date }}</p>
-            <p style="margin: 5px 0;"><strong>Time:</strong> {{ appt.time }}</p>
+            <div class="appt-details">
+                <p>👤 <strong>Provider:</strong> Travel Expert Specialist</p>
+                <p>📅 <strong>Scheduled Date:</strong> {{ appt.date }}</p>
+                <p>⏰ <strong>Reserved Time:</strong> {{ appt.time }}</p>
+            </div>
         </div>
     {% endfor %}
 {% else %}
-    <div style="text-align: center; padding: 40px; background: #fff; border-radius: 10px; border: 1px solid #ddd;">
-        <p>You have no upcoming consultations.</p>
-        <a href="{% url 'available_consultations' %}" style="color: #007bff; font-weight: bold;">Book your first session here</a>
+    <div style="text-align: center; padding: 60px 20px; background: #fff; border-radius: 20px; border: 2px dashed #e2e8f0;">
+        <p style="font-weight: 700; color: #94a3b8; margin-bottom: 20px;">No upcoming sessions scheduled.</p>
+        <a href="{% url 'available_consultations' %}" style="background: #f97316; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800;">Book Expert Guide</a>
     </div>
 {% endif %}
-
-<a href="{% url 'journey_list' %}" class="back-link">← Back to Dashboard</a>
 
 </body>
 </html>

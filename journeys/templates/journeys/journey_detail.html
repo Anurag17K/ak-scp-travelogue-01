@@ -1,101 +1,268 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Journey Details</title>
+    <title>Journey Explorer | {{ journey.title }}</title>
     <style>
-        body { font-family: Arial; max-width: 900px; margin: auto; background-color: #f4f4f9; color: #333;}
-        button { padding: 8px 14px; margin-right: 10px; cursor: pointer; border-radius: 6px; border: none; background-color: #007bff; color: white; }
-        button:hover { background-color: #0056b3; }
-        .service-card { border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 12px; border-radius: 10px; background-color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        .service-type { font-size: 13px; color: gray; text-transform: capitalize; }
-        .back-link { color: #007bff; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px;}
+        :root {
+            --orange: #f97316;
+            --orange-dark: #ea580c;
+            --slate: #1e293b;
+            --slate-light: #64748b;
+            --bg: #fffafb;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            max-width: 1200px; margin: 0 auto; padding: 20px;
+            background-color: var(--bg); color: var(--slate);
+        }
+
+        /* Minimalist Nav */
+        .back-nav { text-decoration: none; color: var(--slate-light); font-weight: 700; font-size: 12px; margin-bottom: 20px; display: inline-block; letter-spacing: 0.5px; }
+        .back-nav:hover { color: var(--orange); }
+
+        /* HERO HEADER */
+        .hero {
+            background: linear-gradient(135deg, var(--orange), #fb923c);
+            color: white; padding: 30px 40px; border-radius: 24px;
+            margin-bottom: 25px; box-shadow: 0 10px 25px rgba(249, 115, 22, 0.15);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .hero h1 { margin: 0; font-size: 2.2em; font-weight: 900; }
+        .hero-meta { text-align: right; opacity: 0.9; font-weight: 700; }
+
+        /* THE BENTO GRID */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto; /* Flexible rows */
+            gap: 20px;
+        }
+
+        /* Grid Item Base */
+        .bento-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease;
+        }
+        .bento-box h3 { 
+            margin-top: 0; font-size: 14px; font-weight: 800; 
+            text-transform: uppercase; color: var(--slate-light); 
+            letter-spacing: 1px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Specific Box Sizing */
+        .box-notes { grid-column: span 2; }
+        .box-weather { grid-column: span 1; background: #fff7ed; border-color: #fed7aa; }
+        .box-controls { grid-column: span 1; }
+        .box-attractions { grid-column: span 4; } /* Wide section for landmarks */
+        .box-safety { grid-column: span 4; }      /* Wide section for infrastructure */
+
+        /* Weather Content */
+        .weather-content { display: flex; justify-content: space-between; align-items: center; }
+        .weather-temp { font-size: 2.5em; font-weight: 900; color: var(--orange-dark); }
+
+        /* Attractions Grid (Internal) */
+        .attractions-inner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .attraction-card {
+            background: #fafafa; border: 1px solid var(--border);
+            padding: 15px; border-radius: 16px; position: relative;
+        }
+        .attraction-card:hover { border-color: var(--orange); background: white; }
+        .attraction-tag { font-size: 9px; font-weight: 900; color: var(--orange); text-transform: uppercase; }
+
+        /* Safety Feed (Internal Grid) */
+        .safety-inner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            max-height: 500px; overflow-y: auto; padding-right: 10px;
+        }
+        .safety-card {
+            padding: 20px; border-radius: 16px; border: 1px solid var(--border);
+            border-left: 5px solid var(--orange); background: white;
+        }
+
+        /* Buttons */
+        .btn { 
+            display: block; width: 100%; padding: 12px; margin-bottom: 10px;
+            border-radius: 12px; border: none; font-weight: 800; font-size: 13px;
+            cursor: pointer; text-align: center; text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-orange { background: var(--orange); color: white; }
+        .btn-slate { background: var(--slate); color: white; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        .type-badge { background: #fff7ed; color: var(--orange-dark); padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+
+        /* Custom Scrollbar */
+        .safety-inner-grid::-webkit-scrollbar { width: 4px; }
+        .safety-inner-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<h2>{{ journey.title }}</h2>
+<a href="{% url 'journey_list' %}" class="back-nav">← RETURN TO LOG</a>
 
-<p><strong>City:</strong> {{ journey.city }}</p>
-<p><strong>Date:</strong> {{ journey.trip_date }}</p>
-<p>{{ journey.description }}</p>
-
-<hr>
-
-<h3>Nearby Emergency Services</h3>
-
-<a href="?action=city">
-    <button type="button">Services for Trip City</button>
-</a>
-
-<button type="button" onclick="fetchCurrentLocation()">
-    Services Near My Current Location
-</button>
-
-<br><br>
-{% if weather_data %}
-    <div style="background-color: #e3f2fd; border-left: 5px solid #007bff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h4 style="margin-top: 0; color: #0056b3;">🌤️ Live Weather at this Location</h4>
-        <strong>Temperature:</strong> {{ weather_data.temperature }} °C <br>
-        <strong>Wind Speed:</strong> {{ weather_data.windspeed }} km/h <br>
-        <small style="color: gray;"><em>Data securely routed via Open-Meteo Backend Integration</em></small>
+<header class="hero">
+    <div class="hero-content">
+        <h1>{{ journey.title }}</h1>
+        <div style="font-weight: 700; opacity: 0.9;">📍 {{ journey.city }}</div>
     </div>
-{% endif %}
+    <div class="hero-meta">
+        <div>{{ journey.trip_date }}</div>
+        <div style="font-size: 12px; color: #fff; background: rgba(0,0,0,0.1); padding: 4px 10px; border-radius: 20px; margin-top: 8px;">DATA SYNC ACTIVE</div>
+    </div>
+</header>
 
-<div id="services-list">
+<div class="bento-grid">
+    
+    <section class="bento-box box-notes">
+        <h3>📝 Field Notes</h3>
+        <p style="margin: 0; color: var(--slate-light); font-weight: 500;">
+            {{ journey.description|default:"No notes provided for this record." }}
+        </p>
+    </section>
 
-<div id="services-list">
-    {% if emergency_services is not None %}
-        {% if emergency_services %}
-            {% for service in emergency_services %}
-                <div class="service-card">
-                    <strong>
-                        {% if service.service_type.name == 'Hospital' %}
-                        {% elif service.service_type.name == 'Police Station' %}
-                        {% elif service.service_type.name == 'Pharmacy' %}
-                        {% elif service.service_type.name == 'Fire Station' %}
-                        {% else %}{% endif %}
-                        {{ service.name }}
-                    </strong><br>
-                    <span class="service-type">{{ service.service_type.name }}</span><br>
-                    <small><b>Address:</b> {{ service.address }}</small><br>
-                    <small><b>Phone:</b> {{ service.phone|default:"Not listed" }}</small>
+    <section class="bento-box box-weather">
+        <h3>🌤️ Climate</h3>
+        <div class="weather-content">
+            {% if weather_data %}
+                <div>
+                    <div style="font-weight: 800; color: #c2410c;">Wind Speed</div>
+                    <div style="font-weight: 700; color: #9a3412;">{{ weather_data.windspeed }} km/h</div>
                 </div>
-            {% endfor %}
-        {% else %}
-            <p>No emergency services found for this location.</p>
+                <div class="weather-temp">{{ weather_data.temperature }}°C</div>
+            {% else %}
+                <p style="font-size: 12px; font-weight: 600;">Data Pending...</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="bento-box box-controls">
+        <h3>⚙️ Controls</h3>
+        <a href="?action=city" class="btn btn-orange">SCAN AREA</a>
+        <button onclick="fetchCurrentLocation()" class="btn btn-slate">USE GPS</button>
+        <div id="status-msg" style="text-align: center; font-size: 10px; font-weight: 800; color: var(--orange);"></div>
+    </section>
+
+    <section class="bento-box box-attractions">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">✨ Top Attractions</h3>
+            <span class="type-badge">POWERED BY OPENTRIPMAP</span>
+        </div>
+        <div class="attractions-inner-grid">
+            {% if attractions %}
+                {% for spot in attractions %}
+                    <div class="attraction-card">
+                        <div class="attraction-tag">{{ spot.type }}</div>
+                        <div style="font-weight: 800; font-size: 14px; margin: 8px 0; min-height: 40px;">{{ spot.name }}</div>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ spot.lat }},{{ spot.lon }}" target="_blank" style="font-size: 11px; color: var(--orange); text-decoration: none; font-weight: 800;">OPEN MAP ↗</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="grid-column: 1/-1; text-align: center; color: var(--slate-light); padding: 40px; border: 2px dashed var(--border); border-radius: 16px;">
+                    No landmarks loaded. Click "SCAN AREA" to synchronize.
+                </p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="bento-box box-safety">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">🛡️ Safety Infrastructure</h3>
+            <div id="count-badge" style="background: var(--slate); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;">
+                {{ emergency_services|length }} Records
+            </div>
+        </div>
+
+        {% if emergency_services %}
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;">
+                <button class="filter-btn active" onclick="filterServices('All', this)">All</button>
+                <button class="filter-btn" onclick="filterServices('Hospital', this)">Hospitals</button>
+                <button class="filter-btn" onclick="filterServices('Police Station', this)">Police</button>
+                <button class="filter-btn" onclick="filterServices('Pharmacy', this)">Pharmacies</button>
+            </div>
         {% endif %}
-    {% else %}
-        <p style="color: gray; font-style: italic;">Click a button above to load emergency services.</p>
-    {% endif %}
+
+        <div class="safety-inner-grid" id="services-list">
+            {% if emergency_services %}
+                {% for service in emergency_services %}
+                <div class="safety-card" data-category="{{ service.service_type.name }}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <strong style="font-size: 15px;">{{ service.name }}</strong>
+                        <span class="type-badge">{{ service.service_type.name }}</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 15px;">
+                        📍 {{ service.address|truncatechars:50 }}<br>
+                        📞 {{ service.phone|default:"Unlisted" }}
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ service.lat|default:service.latitude }},{{ service.lon|default:service.longitude }}" target="_blank" style="font-size: 11px; color: var(--orange-dark); font-weight: 800; text-decoration: none;">GET DIRECTIONS ↗</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: #fafafa; border-radius: 24px; border: 2px dashed var(--border);">
+                    <p style="color: var(--slate-light); font-weight: 700;">Infrastructure data offline. Scan to fetch area records.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
 </div>
 
-<a href="{% url 'journey_list' %}" class="back-link">← Back to Journeys</a>
-
 <script>
+// GPS RELOCALIZATION
 function fetchCurrentLocation() {
-    const container = document.getElementById("services-list");
-    container.innerHTML = "<p>Asking for location permission...</p>";
-
-    if (!navigator.geolocation) {
-        container.innerHTML = "<p>Geolocation is not supported by your browser.</p>";
-        return;
-    }
-
+    const status = document.getElementById("status-msg");
+    status.innerText = "LOCALIZING...";
     navigator.geolocation.getCurrentPosition(
-        position => {
-            container.innerHTML = "<p>Location found! Fetching data securely from server...</p>";
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            
-            // Reload the page with the coordinates so Python can safely make the API call
-            window.location.href = `?lat=${lat}&lon=${lon}`;
-        },
-        () => {
-            container.innerHTML = "<p>Location access denied. Please allow location permissions to use this feature.</p>";
-        }
+        p => { window.location.href = `?lat=${p.coords.latitude}&lon=${p.coords.longitude}`; },
+        () => { status.innerText = "ACCESS DENIED"; }
     );
 }
-</script>
 
+// CLIENT-SIDE FILTERING
+function filterServices(cat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'white';
+        b.style.color = 'var(--slate-light)';
+    });
+    btn.classList.add('active');
+    btn.style.background = 'var(--orange)';
+    btn.style.color = 'white';
+
+    let visible = 0;
+    document.querySelectorAll('.safety-card').forEach(card => {
+        if (cat === 'All' || card.getAttribute('data-category') === cat) {
+            card.style.display = 'block'; visible++;
+        } else { card.style.display = 'none'; }
+    });
+    document.getElementById('count-badge').innerText = visible + " Records";
+}
+
+// Inline CSS for the Filter Buttons
+const style = document.createElement('style');
+style.innerHTML = `
+    .filter-btn {
+        background: white; border: 1px solid var(--border); padding: 8px 16px;
+        border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;
+        transition: 0.2s; color: var(--slate-light);
+    }
+    .filter-btn:hover { border-color: var(--orange); }
+`;
+document.head.appendChild(style);
+</script>
 </body>
 </html>

@@ -1,47 +1,42 @@
 {% block content %}
-<div class="container mt-4">
-    {% if messages %}
-        <div class="mt-3 mb-3">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+<style>
+    .inspire-body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .hero { 
+        background: linear-gradient(135deg, #f97316, #fb923c); color: white; 
+        padding: 50px 20px; border-radius: 20px; text-align: center; margin-bottom: 40px;
+    }
+    .hero h2 { font-size: 3em; margin: 0; font-weight: 900; }
+    .btn-dice { 
+        background: #1e293b; color: white; padding: 15px 30px; border-radius: 30px; 
+        text-decoration: none; font-weight: 800; display: inline-block; margin-top: 20px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .t-card { 
+        background: white; border-radius: 16px; border: 1px solid #e2e8f0; 
+        padding: 25px; transition: 0.3s;
+    }
+    .t-card:hover { transform: translateY(-5px); border-color: #f97316; }
+    .t-card h3 { color: #f97316; margin: 0 0 10px 0; font-weight: 800; }
+</style>
 
-    <div class="text-center mb-5">
-        <h2>✨ Your Travel Inspiration ✨</h2>
-        <p class="text-muted">Not sure where to go next? Here are a few ideas generated just for you.</p>
-        <a href="{% url 'surprise_me' %}" class="btn btn-primary mt-2">
-            Roll the Dice Again! 🎲
-        </a>
+<div class="inspire-body">
+    <a href="{% url 'journey_list' %}" style="text-decoration: none; color: #64748b; font-weight: 700;">← Back</a>
+    
+    <div class="hero">
+        <h2>✨ Inspiration Hub</h2>
+        <p>AI-generated travel routes for your next adventure.</p>
+        <a href="{% url 'surprise_me' %}" class="btn-dice">🎲 Roll the Dice</a>
     </div>
 
-    <div class="row">
+    <div class="grid">
         {% for trip in suggestions %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm border-info">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">{{ trip.city }}</h5>
-                </div>
-                <div class="card-body">
-                    <h6 class="card-title text-primary">{{ trip.title }}</h6>
-                    <p class="card-text">{{ trip.description }}</p>
-                    <p class="text-muted small"><i class="fas fa-calendar-alt"></i> Suggested Date: {{ trip.date }}</p>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center">
-            <p>No suggestions could be generated right now. Try rolling the dice again!</p>
+        <div class="t-card">
+            <h3>{{ trip.city }}</h3>
+            <strong style="display: block; margin-bottom: 10px;">{{ trip.title }}</strong>
+            <p style="color: #475569; font-size: 0.9em;">{{ trip.description }}</p>
+            <div style="margin-top: 15px; font-weight: 700; color: #f97316; font-size: 0.8em;">📅 {{ trip.date }}</div>
         </div>
         {% endfor %}
-    </div>
-    
-    <div class="text-center mt-4">
-        <a href="{% url 'journey_list' %}" class="btn btn-outline-secondary">Back to My Trips</a>
     </div>
 </div>
 {% endblock %}
