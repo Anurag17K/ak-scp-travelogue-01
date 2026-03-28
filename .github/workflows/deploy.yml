@@ -11,20 +11,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
       - name: Create ZIP deployment package
-        # Zips the Django app AND includes the SQLite database
-        run: zip -r deploy.zip . -x "*.git*" ".github*"
+        # Note: I added -x "*.sqlite3" to protect your database if it's stored on the server!
+        run: |
+          zip -r deploy.zip . -x "venv/*" "*.git*" ".github*" "__pycache__/*" "*.pyc" "*.sqlite3"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
+          # Session token removed for standard AWS accounts
           application_name: travelogue
-          environment_name: travelogue-env  # Make sure this matches your active AWS environment!
+          environment_name: travelogue-env-01
           version_label: "travelogue-${{ github.sha }}"
-          region: us-east-1
+          region: us-east-1 # Adjusted to Dublin for NCI proximity
           deployment_package: deploy.zip
