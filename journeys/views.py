@@ -1,23 +1,52 @@
 import requests
-from datetime import date
+import random
+from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django import forms
 from django.contrib import messages
-from .models import Journey
+from django.db.models import Sum
+from .models import Journey, Expense
 from geopy.geocoders import Nominatim
-import random
 
 # --- CONFIGURATION ---
 EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
 APPOINTMENT_API_BASE = "http://api-env.eba-45cakfm9.us-east-1.elasticbeanstalk.com"
 APPOINTMENT_API_KEY = "e7637b60-73c9-4406-9948-9e5d8154b918"
-DEFAULT_PROVIDER_ID = 4  # Provider ID 
-EXPENSE_API_BASE = "https://7xig37y0fj.execute-api.us-east-1.amazonaws.com/prod"
-
+DEFAULT_PROVIDER_ID = 4  
 geolocator = Nominatim(user_agent="travelogue")
+
+
+# ---------------------------
+# Helper Functions
+# ---------------------------
+def get_opentripmap_data(lat, lon):
+    """Helper function to fetch tourist spots from OpenTripMap"""
+    API_KEY = "5ae2e3f221c38a28845f05b6773a26a8ad52cbaeec0ac46925812047"
+    url = (
+        f"https://api.opentripmap.com/0.1/en/places/radius?"
+        f"radius=5000&lon={lon}&lat={lat}&"
+        f"kinds=interesting_places&format=json&limit=10&apikey={API_KEY}"
+    )
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            raw_data = response.json()
+            return [
+                {
+                    'name': item.get('name'),
+                    'type': item.get('kinds', 'Landmark').split(',')[0].replace('_', ' ').title(),
+                    'lat': item.get('point', {}).get('lat'),
+                    'lon': item.get('point', {}).get('lon')
+                }
+                for item in raw_data if item.get('name')
+            ]
+    except Exception as e:
+        print(f"OpenTripMap Helper Error: {e}")
+    return []
+
 
 # ---------------------------
 # Journey Views
@@ -47,10 +76,8 @@ def journey_create(request):
 
 @login_required
 def journey_detail(request, id):
-    # Ensure user security
     journey = get_object_or_404(Journey, id=id, user=request.user)
     
-    # Initialize variables
     emergency_services = None 
     weather_data = None 
     attractions = None 
@@ -63,7 +90,6 @@ def journey_detail(request, id):
         target_lat = None
         target_lon = None
 
-        # Logic to determine coordinates
         if user_lat and user_lon:
             target_lat, target_lon = user_lat, user_lon
             params = {"lat": user_lat, "lon": user_lon}
@@ -81,10 +107,8 @@ def journey_detail(request, id):
         except requests.exceptions.RequestException:
             emergency_services = []
 
-        # 2. Fetch Weather & Attractions (Requires target_lat/target_lon)
+        # 2. Fetch Weather & Attractions 
         if target_lat and target_lon:
-            
-            # --- Weather (Open-Meteo) ---
             try:
                 w_url = "https://api.open-meteo.com/v1/forecast"
                 w_params = {"latitude": target_lat, "longitude": target_lon, "current_weather": "true"}
@@ -94,8 +118,6 @@ def journey_detail(request, id):
             except Exception:
                 weather_data = None
 
-            # --- Attractions (OpenTripMap) ---
-            # Using our separate helper function
             attractions = get_opentripmap_data(target_lat, target_lon)
 
     return render(request, 'journeys/journey_detail.html', {
@@ -132,30 +154,88 @@ def journey_delete(request, id):
         return redirect('journey_list')
     return render(request, 'journeys/journey_confirm_delete.html', {'journey': journey})
 
+
 # ---------------------------
-# Consultation Views (API Only)
+# Expense Tracker Views (RDS Optimized)
+# ---------------------------
+@login_required
+def expense_tracker(request, journey_id):
+    journey = get_object_or_404(Journey, id=journey_id, user=request.user)
+    
+    # Handle Adding a New Expense
+    if request.method == 'POST':
+        expense_date = request.POST.get('expenseDate') or request.POST.get('date')
+        category = request.POST.get('category')
+        amount = request.POST.get('amount')
+        
+        Expense.objects.create(
+            journey=journey,
+            user=request.user,
+            date=expense_date,
+            category=category,
+            amount=amount
+        )
+        return redirect('expense_tracker', journey_id=journey.id)
+
+    # Fetch expenses for this specific journey
+    expenses = journey.expenses.all().order_by('-date')
+    
+    # RDS Postgres Optimization
+    aggregation = expenses.aggregate(total=Sum('amount'))
+    total_spent = aggregation['total'] or 0.00 
+
+    # Package for HTML
+    expense_data = []
+    for exp in expenses:
+        expense_data.append({
+            'expenseDate': exp.date,
+            'category': exp.category,
+            'amount': exp.amount
+        })
+
+    summary = {'total': f"{float(total_spent):.2f}"}
+
+    return render(request, 'journeys/expense_tracker.html', {
+        'journey': journey,
+        'expenses': expense_data,
+        'summary': summary,
+    })
+
+@login_required
+def expense_delete(request, journey_id, expense_date):
+    """Deletes an expense using Django ORM / RDS."""
+    journey = get_object_or_404(Journey, id=journey_id, user=request.user)
+    
+    if request.method == 'POST':
+        expense_to_delete = Expense.objects.filter(
+            journey=journey, 
+            user=request.user, 
+            date=expense_date
+        ).first()
+        
+        if expense_to_delete:
+            expense_to_delete.delete()
+            messages.success(request, "Expense deleted.")
+            
+    return redirect('expense_tracker', journey_id=journey.id)
+
+
+# ---------------------------
+# Consultation Views
 # ---------------------------
 @login_required
 def available_consultations(request):
-    """Shows slots based on the date selected by the user."""
     target_date = request.GET.get('date', str(date.today()))
-    
     headers = {'X-API-KEY': APPOINTMENT_API_KEY}
     params = {'provider_id': DEFAULT_PROVIDER_ID, 'date': target_date}
     
     try:
-        # REMOVED /api/ from the URL path here
         response = requests.get(f"{APPOINTMENT_API_BASE}/slots/", params=params, headers=headers, timeout=5)
-        
         if response.status_code == 200:
-            data = response.json()
-            slots = data.get('slots', [])
+            slots = response.json().get('slots', [])
         else:
-            print(f"API returned {response.status_code}: {response.text}")
             slots = []
-            
-    except Exception as e:
-        print(f"Connection error: {e}")
+    except Exception:
         slots = []
         messages.error(request, "Could not load slots. Check API connection.")
 
@@ -163,7 +243,6 @@ def available_consultations(request):
 
 @login_required
 def book_consultation(request, slot_id):
-    """Finalizes the booking for the user."""
     if request.method == "POST":
         headers = {'X-API-KEY': APPOINTMENT_API_KEY, 'Content-Type': 'application/json'}
         payload = {
@@ -171,9 +250,7 @@ def book_consultation(request, slot_id):
             "customer_name": request.user.username,
             "customer_email": request.user.email
         }
-        
         try:
-            # REMOVED /api/ from the URL path here
             response = requests.post(f"{APPOINTMENT_API_BASE}/book/", json=payload, headers=headers)
             if response.status_code in [200, 201]:
                 messages.success(request, "Consultation booked! Check 'My Bookings'.")
@@ -182,33 +259,91 @@ def book_consultation(request, slot_id):
                 messages.error(request, "Booking failed. Slot might be taken.")
         except Exception:
             messages.error(request, "API Error occurred.")
-
     return redirect('available_consultations')
 
 @login_required
 def my_appointments(request):
-    """Fetches only the logged-in user's bookings directly from the API."""
     headers = {'X-API-KEY': APPOINTMENT_API_KEY}
     params = {'customer_email': request.user.email}
-    
     try:
-        # REMOVED /api/ from the URL path here
         response = requests.get(f"{APPOINTMENT_API_BASE}/appointments/", params=params, headers=headers, timeout=5)
-        
         if response.status_code == 200:
             data = response.json()
-            if isinstance(data, dict):
-                user_appts = data.get('appointments', data.get('data', []))
-            else:
-                user_appts = data
+            user_appts = data.get('appointments', data.get('data', [])) if isinstance(data, dict) else data
         else:
             user_appts = []
-            
-    except Exception as e:
-        print(f"Error fetching appointments: {e}")
+    except Exception:
         user_appts = []
-
     return render(request, 'journeys/my_appointments.html', {'appointments': user_appts})
+
+
+# ---------------------------
+# Mock API / Surprise Me
+# ---------------------------
+FALLBACK_TRIPS = [
+    {
+        'title': 'Local Hidden Gem', 
+        'city': 'Nearby Town', 
+        'description': 'A beautiful spot right in your backyard!',
+        'date': str(date.today()) 
+    }
+]
+
+@login_required
+def surprise_me(request):
+    # 1. A curated vault of actual, amazing global destinations with pre-fetched coordinates.
+    # This prevents Geocoding API timeouts and guarantees OpenTripMap has data!
+    REAL_DESTINATIONS = [
+        {'city': 'Kyoto', 'country': 'Japan', 'lat': 35.0116, 'lon': 135.7681},
+        {'city': 'Reykjavik', 'country': 'Iceland', 'lat': 64.1466, 'lon': -21.9426},
+        {'city': 'Florence', 'country': 'Italy', 'lat': 43.7695, 'lon': 11.2558},
+        {'city': 'Marrakech', 'country': 'Morocco', 'lat': 31.6295, 'lon': -7.9811},
+        {'city': 'Cape Town', 'country': 'South Africa', 'lat': -33.9249, 'lon': 18.4241},
+        {'city': 'Cusco', 'country': 'Peru', 'lat': -13.5226, 'lon': -71.9673},
+        {'city': 'Prague', 'country': 'Czechia', 'lat': 50.0755, 'lon': 14.4378},
+        {'city': 'Hanoi', 'country': 'Vietnam', 'lat': 21.0285, 'lon': 105.8542},
+        {'city': 'Edinburgh', 'country': 'Scotland', 'lat': 55.9533, 'lon': -3.1883},
+        {'city': 'Cartagena', 'country': 'Colombia', 'lat': 10.3910, 'lon': -75.4794}
+    ]
+
+    travel_descriptions = [
+        "A perfect getaway to capture some stunning photography. Explore the hidden streets and rich local culture.",
+        "Immerse yourself in breathtaking landscapes. Make sure to bring your camera for this incredible adventure!",
+        "From historical landmarks to vibrant local life, this destination offers endless opportunities to explore and unwind."
+    ]
+
+    suggested_trips = []
+    
+    # 2. Randomly select 3 unique destinations from our curated list
+    chosen_spots = random.sample(REAL_DESTINATIONS, 3)
+
+    for spot in chosen_spots:
+        full_name = f"{spot['city']}, {spot['country']}"
+        
+        # 3. Fetch live attractions from OpenTripMap directly using the pre-baked coordinates
+        attractions = []
+        try:
+            all_spots = get_opentripmap_data(spot['lat'], spot['lon'])
+            attractions = all_spots[:3] if all_spots else []
+        except Exception as e:
+            print(f"OpenTripMap Error for {full_name}: {e}")
+
+        # Generate a random future date within the next 6 months for the UI
+        random_days = random.randint(14, 180)
+        trip_date = date.today() + timedelta(days=random_days)
+
+        # 4. Package the data for the template
+        suggested_trips.append({
+            'title': f"Expedition to {spot['city']}",
+            'city': full_name,
+            'description': random.choice(travel_descriptions),
+            'date': str(trip_date),
+            'attractions': attractions,
+            'lat': spot['lat'],
+            'lon': spot['lon']
+        })
+
+    return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
 
 # ---------------------------
 # Auth Views
@@ -241,171 +376,22 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 @login_required
-def expense_tracker(request):
-    """Fetches the user's expense summary and list of expenses."""
-    user_id = request.user.username  # Using Django username as API userId
-    
-    summary_data = {}
-    expenses_data = []
-    
-    # 1. Fetch Summary
-    try:
-        res_summary = requests.get(f"{EXPENSE_API_BASE}/summary", params={"userId": user_id}, timeout=5)
-        if res_summary.status_code == 200:
-            summary_data = res_summary.json()
-    except Exception as e:
-        print(f"Summary API Error: {e}")
-        messages.error(request, "Could not load expense summary.")
-
-    # 2. Fetch Expenses List
-    try:
-        res_expenses = requests.get(f"{EXPENSE_API_BASE}/expense", params={"userId": user_id}, timeout=5)
-        if res_expenses.status_code == 200:
-            # Assuming the API returns a list or a dict with an 'expenses' key
-            data = res_expenses.json()
-            expenses_data = data.get('expenses', data) if isinstance(data, dict) else data
-    except Exception as e:
-        print(f"Expense API Error: {e}")
-        messages.error(request, "Could not load expenses list.")
-
-    return render(request, 'journeys/expense_tracker.html', {
-        'summary': summary_data,
-        'expenses': expenses_data
-    })
-
-@login_required
-def expense_add(request):
-    """Handles adding a new expense matching the specific API payload."""
+def save_inspiration(request):
+    """Catches the hidden form data and creates a new Journey."""
     if request.method == 'POST':
-        # Match the exact payload structure from the Network tab
-        payload = {
-            "userId": request.user.username,
-            "expenseDate": request.POST.get('expenseDate', str(date.today())), # Grabs date from form, or defaults to today
-            "category": request.POST.get('category'), 
-            "amount": str(request.POST.get('amount')) # API expects this as a string
-        }
-        
-        try:
-            response = requests.post(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
-            
-            if response.status_code in [200, 201]:
-                messages.success(request, "Expense added successfully!")
-            else:
-                messages.error(request, f"API Rejected: {response.text}")
-        except Exception as e:
-            messages.error(request, f"Connection Error: {str(e)}")
-            
-    return redirect('expense_tracker')
-
-@login_required
-def expense_delete(request, expense_date):
-    """Handles deleting an expense using the required API payload."""
-    if request.method == 'POST':
-        # Matching the exact payload the API expects
-        payload = {
-            "userId": request.user.username,
-            "expenseDate": expense_date
-        }
-        
-        try:
-            response = requests.delete(f"{EXPENSE_API_BASE}/expense", json=payload, timeout=5)
-            
-            if response.status_code == 200:
-                messages.success(request, f"Expense from {expense_date} deleted.")
-            else:
-                messages.error(request, f"Failed to delete: {response.text}")
-        except Exception as e:
-            messages.error(request, "API Connection Error.")
-            
-    return redirect('expense_tracker')
-    
-FALLBACK_TRIPS = [
-    {
-        'title': 'Local Hidden Gem', 
-        'city': 'Nearby Town', 
-        'description': 'A beautiful spot right in your backyard!',
-        'date': str(date.today()) # Added to prevent HTML template errors
-    }
-]
-
-@login_required
-def surprise_me(request):
-    suggested_trips = []
-
-    # 1. THE REFINED SCHEMA 
-    # Only ask Faker for places and dates. We will handle the creative writing!
-    schema = {
-        "count": 3,
-        "city": "city",          
-        "country": "country",          
-        "date": "date_this_year"     
-    }
-
-    # 2. OUR CUSTOM DESCRIPTIONS
-    # These sound much better than Faker's random gibberish
-    travel_descriptions = [
-        "A perfect getaway to capture some stunning photography. Explore the hidden streets and rich local culture.",
-        "Immerse yourself in breathtaking landscapes. Make sure to bring your camera for this incredible adventure!",
-        "From historical landmarks to vibrant local life, this destination offers endless opportunities to explore and unwind."
-    ]
-
-    try:
-        response = requests.post(
-            "https://mock-data-api-fk0f.onrender.com/generate/", 
-            json=schema, 
-            timeout=20 
+        # Create the Journey directly in your RDS Postgres Database
+        new_journey = Journey.objects.create(
+            user=request.user,
+            title=request.POST.get('title'),
+            city=request.POST.get('city'),
+            description=request.POST.get('description'),
+            trip_date=request.POST.get('trip_date'),
+            latitude=request.POST.get('latitude'),
+            longitude=request.POST.get('longitude')
         )
-        response.raise_for_status()
-
-        api_data = response.json().get('data', [])
-        if not api_data and isinstance(response.json(), list):
-            api_data = response.json()
-
-        # 3. THE MAPPING (Injecting the API data into our templates)
-        for item in api_data:
-            city_name = item.get('city', 'Discovery Point')
-            country_name = item.get('country', 'Unknown')
-            
-            suggested_trips.append({
-                'title': f"Expedition to {city_name}", # Dynamically builds a nice title
-                'city': f"{city_name}, {country_name}", # Combines City and Country
-                'description': random.choice(travel_descriptions), # Picks a random good description
-                'date': item.get('date', str(date.today()))
-            })
-
-    except Exception as e:
-        print(f"Inspiration API Error: {e}")
-        suggested_trips = FALLBACK_TRIPS
-        messages.warning(request, "Using saved inspiration while our engine warms up.")
-
-    return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
-
-def get_opentripmap_data(lat, lon):
-    """Helper function to fetch tourist spots from OpenTripMap"""
-    # Hard-coded key as requested
-    API_KEY = "5ae2e3f221c38a28845f05b6773a26a8ad52cbaeec0ac46925812047"
-    
-    url = (
-        f"https://api.opentripmap.com/0.1/en/places/radius?"
-        f"radius=5000&lon={lon}&lat={lat}&"
-        f"kinds=interesting_places&format=json&limit=10&apikey={API_KEY}"
-    )
-
-    try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            raw_data = response.json()
-            # Transform the raw API data into a clean list for our HTML
-            return [
-                {
-                    'name': item.get('name'),
-                    'type': item.get('kinds', 'Landmark').split(',')[0].replace('_', ' ').title(),
-                    'lat': item.get('point', {}).get('lat'),
-                    'lon': item.get('point', {}).get('lon')
-                }
-                for item in raw_data if item.get('name')
-            ]
-    except Exception as e:
-        print(f"OpenTripMap Helper Error: {e}")
-    
-    return []
+        
+        # Add a success message and redirect them directly to their new trip dashboard!
+        messages.success(request, f"Successfully saved {new_journey.city} to your timeline!")
+        return redirect('journey_detail', id=new_journey.id)
+        
+    return redirect('surprise_me')

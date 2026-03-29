@@ -1,40 +1,97 @@
 {% block content %}
 <style>
-    .inspire-body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .inspire-body { font-family: 'Inter', system-ui, sans-serif; max-width: 1100px; margin: 0 auto; padding: 20px; color: #1e293b; }
     .hero { 
         background: linear-gradient(135deg, #f97316, #fb923c); color: white; 
-        padding: 50px 20px; border-radius: 20px; text-align: center; margin-bottom: 40px;
+        padding: 50px 20px; border-radius: 24px; text-align: center; margin-bottom: 40px;
+        box-shadow: 0 10px 25px rgba(249, 115, 22, 0.15);
     }
-    .hero h2 { font-size: 3em; margin: 0; font-weight: 900; }
+    .hero h2 { font-size: 3em; margin: 0; font-weight: 900; letter-spacing: -1px; }
     .btn-dice { 
-        background: #1e293b; color: white; padding: 15px 30px; border-radius: 30px; 
+        background: #1e293b; color: white; padding: 15px 30px; border-radius: 12px; 
         text-decoration: none; font-weight: 800; display: inline-block; margin-top: 20px;
+        transition: 0.2s; border: none; cursor: pointer;
     }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .btn-dice:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2); }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+    
     .t-card { 
-        background: white; border-radius: 16px; border: 1px solid #e2e8f0; 
-        padding: 25px; transition: 0.3s;
+        background: white; border-radius: 20px; border: 1px solid #e2e8f0; 
+        padding: 30px; transition: 0.3s; display: flex; flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
     }
-    .t-card:hover { transform: translateY(-5px); border-color: #f97316; }
-    .t-card h3 { color: #f97316; margin: 0 0 10px 0; font-weight: 800; }
+    .btn-save { 
+        display: block; width: 100%; padding: 12px; margin-top: 20px;
+        background: #1e293b; color: white; border: none; border-radius: 12px; 
+        font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.2s;
+    }
+    .btn-save:hover { background: #0f172a; transform: translateY(-2px); }
+    .t-card:hover { transform: translateY(-5px); border-color: #f97316; box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.1); }
+    .t-card h3 { color: #f97316; margin: 0 0 5px 0; font-weight: 900; font-size: 1.4em; }
+    
+    /* New Attraction Styles */
+    .attraction-list { margin-top: 20px; padding-top: 20px; border-top: 2px dashed #f1f5f9; flex-grow: 1; }
+    .spot-item { 
+        background: #fffafb; border: 1px solid #ffedd5; padding: 12px; 
+        border-radius: 12px; margin-bottom: 10px;
+    }
+    .spot-name { font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 5px; }
+    .spot-meta { display: flex; justify-content: space-between; align-items: center; }
+    .spot-tag { font-size: 9px; font-weight: 900; color: #ea580c; text-transform: uppercase; background: #ffedd5; padding: 2px 6px; border-radius: 4px; }
+    .spot-link { font-size: 11px; color: #f97316; text-decoration: none; font-weight: 800; }
+    .spot-link:hover { text-decoration: underline; }
 </style>
 
 <div class="inspire-body">
-    <a href="{% url 'journey_list' %}" style="text-decoration: none; color: #64748b; font-weight: 700;">← Back</a>
+    <a href="{% url 'journey_list' %}" style="text-decoration: none; color: #64748b; font-weight: 800; font-size: 13px; margin-bottom: 20px; display: inline-block;">← RETURN TO DASHBOARD</a>
     
     <div class="hero">
-        <h2>✨ Inspiration Hub</h2>
-        <p>AI-generated travel routes for your next adventure.</p>
-        <a href="{% url 'surprise_me' %}" class="btn-dice">🎲 Roll the Dice</a>
+        <h2>Inspiration Hub</h2>
+        <p style="font-weight: 600; opacity: 0.9;">Your travel routes !!.</p>
+        <a href="{% url 'surprise_me' %}" class="btn-dice">Click to see</a>
     </div>
 
     <div class="grid">
         {% for trip in suggestions %}
         <div class="t-card">
             <h3>{{ trip.city }}</h3>
-            <strong style="display: block; margin-bottom: 10px;">{{ trip.title }}</strong>
-            <p style="color: #475569; font-size: 0.9em;">{{ trip.description }}</p>
-            <div style="margin-top: 15px; font-weight: 700; color: #f97316; font-size: 0.8em;">📅 {{ trip.date }}</div>
+            <strong style="display: block; margin-bottom: 10px; color: #1e293b;">{{ trip.title }}</strong>
+            <p style="color: #64748b; font-size: 0.9em; line-height: 1.5; margin: 0;">{{ trip.description }}</p>
+            
+            <div class="attraction-list">
+                <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px;">Top Local Attractions</div>
+                
+                {% if trip.attractions %}
+                    {% for spot in trip.attractions %}
+                        <div class="spot-item">
+                            <div class="spot-name">{{ spot.name }}</div>
+                            <div class="spot-meta">
+                                <span class="spot-tag">{{ spot.type }}</span>
+                                <a href="https://maps.google.com/?q={{ spot.lat }},{{ spot.lon }}" target="_blank" class="spot-link">VIEW MAP ↗</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; font-weight: 600; background: #f8fafc; border-radius: 12px;">
+                        No landmarks found for this region.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-top: 20px; font-weight: 800; color: #1e293b; font-size: 0.85em; text-align: right;">
+                SUGGESTED DATE: <span style="color: #f97316;">{{ trip.date }}</span>
+            </div>
+            <form action="{% url 'save_inspiration' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="title" value="{{ trip.title }}">
+                <input type="hidden" name="city" value="{{ trip.city }}">
+                <input type="hidden" name="description" value="{{ trip.description }}">
+                <input type="hidden" name="trip_date" value="{{ trip.date }}">
+                <input type="hidden" name="latitude" value="{{ trip.lat }}">
+                <input type="hidden" name="longitude" value="{{ trip.lon }}">
+                <button type="submit" class="btn-save">>SAVE TO DASHBOARD</button>
+            </form>
         </div>
         {% endfor %}
     </div>

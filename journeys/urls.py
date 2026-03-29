@@ -13,8 +13,8 @@ urlpatterns = [
     path('consultations/', views.available_consultations, name='available_consultations'),
     path('consultations/book/<int:slot_id>/', views.book_consultation, name='book_consultation'),
     path('consultations/mine/', views.my_appointments, name='my_appointments'),
-    path('expenses/', views.expense_tracker, name='expense_tracker'),
-    path('expenses/add/', views.expense_add, name='expense_add'),
-    path('expenses/delete/<str:expense_date>/', views.expense_delete, name='expense_delete'),
+    path('<int:journey_id>/expenses/', views.expense_tracker, name='expense_tracker'),
+    path('<int:journey_id>/expenses/delete/<str:expense_date>/', views.expense_delete, name='expense_delete'),
     path('surprise-me/', views.surprise_me, name='surprise_me'),
+    path('surprise-me/save/', views.save_inspiration, name='save_inspiration'),
 ]

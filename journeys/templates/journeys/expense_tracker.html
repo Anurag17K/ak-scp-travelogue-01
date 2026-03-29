@@ -9,6 +9,7 @@
         box-shadow: 0 10px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
     }
     .summary h2 { margin: 0; font-size: 1.1em; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;}
+    .trip-title { font-size: 1.4em; font-weight: 800; margin-top: 5px; color: white; }
     .total { font-size: 3em; font-weight: 900; color: #f97316; }
 
     .card { background: white; border: 1px solid #e2e8f0; padding: 25px; border-radius: 16px; margin-bottom: 30px; }
@@ -25,20 +26,22 @@
 </style>
 
 <div class="exp-body">
-    <a href="{% url 'journey_list' %}" class="back">← Dashboard</a>
+    <a href="{% url 'journey_detail' journey.id %}" class="back">← Back to Trip Dashboard</a>
 
     <div class="summary">
         <div>
             <h2>Total Expenditure</h2>
-            <small>AWS DynamoDB Synced</small>
+            <div class="trip-title">{{ journey.title }}</div>
+            <small style="opacity: 0.7;"> {{ journey.city }}</small>
         </div>
         <div class="total">${{ summary.total|default:"0.00" }}</div>
     </div>
 
     <div class="card">
         <h3>Log New Expense</h3>
-        <form action="{% url 'expense_add' %}" method="POST" class="form-row">
+        <form method="POST" class="form-row">
             {% csrf_token %}
+            <input type="hidden" name="action" value="add">
             <input type="date" name="expenseDate" required>
             <input type="text" name="category" placeholder="Category (e.g. Flight, Food)" required>
             <input type="number" step="0.01" name="amount" placeholder="0.00" required>
@@ -54,14 +57,18 @@
             <tbody>
                 {% for expense in expenses %}
                 <tr>
-                    <td style="color: #64748b;">{{ expense.expenseDate }}</td>
+                    <td style="color: #64748b;">{{ expense.expenseDate|date:"M d, Y" }}</td>
                     <td>{{ expense.category }}</td>
                     <td style="color: #0f766e;">${{ expense.amount }}</td>
                     <td>
-                        <form action="{% url 'expense_delete' expense.expenseDate %}" method="POST">
+                        <form action="{% url 'expense_delete' journey.id expense.expenseDate %}" method="POST">
                             {% csrf_token %}<button type="submit" class="btn-del">Delete</button>
                         </form>
                     </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">No expenses logged for this trip yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

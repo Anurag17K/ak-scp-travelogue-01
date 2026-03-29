@@ -99,9 +99,11 @@
             border-radius: 12px; border: none; font-weight: 800; font-size: 13px;
             cursor: pointer; text-align: center; text-decoration: none;
             transition: 0.2s;
+            box-sizing: border-box; /* Ensures padding doesn't push buttons out of the box */
         }
         .btn-orange { background: var(--orange); color: white; }
         .btn-slate { background: var(--slate); color: white; }
+        .btn-dark { background: #0f172a; color: white; } /* Added for Expense button */
         .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
         .type-badge { background: #fff7ed; color: var(--orange-dark); padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
@@ -154,6 +156,7 @@
         <h3>⚙️ Controls</h3>
         <a href="?action=city" class="btn btn-orange">SCAN AREA</a>
         <button onclick="fetchCurrentLocation()" class="btn btn-slate">USE GPS</button>
+        <a href="{% url 'expense_tracker' journey.id %}" class="btn btn-dark">💰 TRIP EXPENSES</a>
         <div id="status-msg" style="text-align: center; font-size: 10px; font-weight: 800; color: var(--orange);"></div>
     </section>
 
@@ -168,7 +171,7 @@
                     <div class="attraction-card">
                         <div class="attraction-tag">{{ spot.type }}</div>
                         <div style="font-weight: 800; font-size: 14px; margin: 8px 0; min-height: 40px;">{{ spot.name }}</div>
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ spot.lat }},{{ spot.lon }}" target="_blank" style="font-size: 11px; color: var(--orange); text-decoration: none; font-weight: 800;">OPEN MAP ↗</a>
+                        <a href="https://maps.google.com/?q={{ spot.lat }},{{ spot.lon }}" target="_blank" style="font-size: 11px; color: var(--orange); text-decoration: none; font-weight: 800;">OPEN MAP ↗</a>
                     </div>
                 {% endfor %}
             {% else %}
@@ -205,10 +208,10 @@
                         <span class="type-badge">{{ service.service_type.name }}</span>
                     </div>
                     <div style="font-size: 12px; color: var(--slate-light); margin-bottom: 15px;">
-                        📍 {{ service.address|truncatechars:50 }}<br>
-                        📞 {{ service.phone|default:"Unlisted" }}
+                        {{ service.address|truncatechars:50 }}<br>
+                        {{ service.phone|default:"Unlisted" }}
                     </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ service.lat|default:service.latitude }},{{ service.lon|default:service.longitude }}" target="_blank" style="font-size: 11px; color: var(--orange-dark); font-weight: 800; text-decoration: none;">GET DIRECTIONS ↗</a>
+                    <a href="https://maps.google.com/?q={{ service.lat|default:service.latitude }},{{ service.lon|default:service.longitude }}" target="_blank" style="font-size: 11px; color: var(--orange-dark); font-weight: 800; text-decoration: none;">GET DIRECTIONS ↗</a>
                 </div>
                 {% endfor %}
             {% else %}
