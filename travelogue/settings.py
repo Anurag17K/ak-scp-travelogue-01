@@ -34,8 +34,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Ensure cross-site request forgery (CSRF) tokens work through the proxy
 CSRF_TRUSTED_ORIGINS = ['https://travelogue.anuragktech.me']
 
-APPOINTMENT_API_BASE = "http://api-env.eba-45cakfm9.us-east-1.elasticbeanstalk.com"
-APPOINTMENT_API_KEY = "e7637b60-73c9-4406-9948-9e5d8154b918"
+APPOINTMENT_API_BASE = "https://2o7jj4hez6.execute-api.us-east-1.amazonaws.com"
+APPOINTMENT_API_KEY = "1c1a99f9-a3bb-4b35-bd73-fc72aa4d483f"
 # Application definition
 
 INSTALLED_APPS = [
