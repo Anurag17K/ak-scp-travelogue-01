@@ -1,26 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sign Up</title>
+    <title>Travelogue | Sign Up</title>
     <style>
-        body { font-family: Arial; margin: 50px; }
-        form { max-width: 400px; }
-        input { width: 100%; padding: 8px; margin: 5px 0; }
-        button { padding: 10px; margin-top: 10px; cursor: pointer; }
-        .errorlist { color: red; list-style: none; padding: 0; }
+        :root {
+            --orange: #f97316;
+            --orange-dark: #ea580c;
+            --slate: #1e293b;
+            --slate-light: #64748b;
+            --bg: #fffafb;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--slate);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-container { width: 100%; max-width: 420px; padding: 20px; }
+
+        .auth-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .auth-header { text-align: center; margin-bottom: 30px; }
+
+        /* Matches the navbar-brand from journey_list.html exactly */
+        .app-logo {
+            margin: 0 0 20px 0; 
+            color: var(--orange); 
+            font-size: 26px; 
+            font-weight: 900; 
+            letter-spacing: -1px;
+            text-align: center;
+        }
+
+        .auth-header h2 { margin: 0; font-size: 1.8em; font-weight: 900; color: var(--slate); }
+        .auth-header p { margin: 5px 0 0 0; font-size: 13px; color: var(--slate-light); font-weight: 500; }
+
+        .auth-form p { margin-bottom: 18px; }
+
+        .auth-form label {
+            display: block; font-size: 12px; font-weight: 800; text-transform: uppercase;
+            color: var(--slate-light); margin-bottom: 6px; letter-spacing: 0.5px;
+        }
+
+        .auth-form input {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--border);
+            border-radius: 12px; font-size: 14px; box-sizing: border-box;
+            font-family: inherit; transition: 0.2s ease; color: var(--slate);
+        }
+
+        .auth-form input:focus {
+            outline: none; border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+
+        .helptext { display: block; font-size: 11px; color: var(--slate-light); margin-top: 6px; line-height: 1.4; }
+
+        .errorlist {
+            color: #ef4444; background: #fef2f2; padding: 10px 15px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; list-style: none; margin: 0 0 15px 0; border: 1px solid #fca5a5;
+        }
+
+        .btn-submit {
+            width: 100%; background: linear-gradient(135deg, var(--orange), #fb923c); color: white;
+            padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800;
+            cursor: pointer; transition: 0.2s; margin-top: 10px;
+        }
+
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2); }
+
+        .auth-footer { text-align: center; margin-top: 25px; font-size: 13px; color: var(--slate-light); font-weight: 600; }
+        .auth-footer a { color: var(--orange); text-decoration: none; font-weight: 800; }
+        .auth-footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-<h2>Sign Up</h2>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="app-logo">TRAVELOGUE</div>
+            <h2>Start Exploring</h2>
+            <p>Create an account to log your journeys.</p>
+        </div>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Register</button>
-</form>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-submit">Register Account</button>
+        </form>
 
-<p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
