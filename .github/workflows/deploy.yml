@@ -22,7 +22,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Provided by GitHub automatically
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # You must add this to GitHub Secrets
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -53,6 +53,5 @@ jobs:
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          # IMPORTANT: Replace this with your actual Elastic Beanstalk URL
           target: 'https://travelogue.anuragktech.me/'
-          fail_action: false # Set to true later if you want failed scans to turn the pipeline red
+          fail_action: false
