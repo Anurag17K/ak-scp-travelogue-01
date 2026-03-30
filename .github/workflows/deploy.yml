@@ -57,7 +57,14 @@ jobs:
 
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
         with:
           target: 'https://travelogue.anuragktech.me/'
           fail_action: false
-          artifact_name: 'zap_scan_report'
+
+      # NEW: Manually grab the HTML report using GitHub's updated API
+      - name: Upload ZAP HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZAP-Security-Report
+          path: report_html.html
