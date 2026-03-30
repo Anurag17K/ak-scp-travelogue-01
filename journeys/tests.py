@@ -2,7 +2,9 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 from .models import Journey
-from unittest.mock import patch
+import json
+from .models import Journey, Expense
+from unittest.mock import patch, MagicMock
 
 class TravelogueIntegrationTest(TestCase):
     def setUp(self):
@@ -56,3 +58,82 @@ class TravelogueIntegrationTest(TestCase):
         response = self.client.post(delete_url) # View handles deletion on POST
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Journey.objects.filter(id=journey.id).exists())
+
+class TravelogueExtendedTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Create a user and log them in
+        self.user = User.objects.create_user(username='finance_guru', password='Password123!')
+        self.client.login(username='finance_guru', password='Password123!')
+        
+        # Create a base Journey to attach expenses to
+        self.journey = Journey.objects.create(
+            user=self.user,
+            title='Paris Trip',
+            city='Paris',
+            trip_date='2026-05-01',
+            description='A lovely trip.'
+        )
+
+    def test_expense_tracker_flow(self):
+        """Tests the full CRUD flow of the Expense Tracker."""
+        expense_url = reverse('expense_tracker', args=[self.journey.id])
+        
+        # 1. Create an Expense
+        expense_data = {
+            'expenseDate': '2026-05-02',
+            'category': 'Food',
+            'amount': '45.50'
+        }
+        response = self.client.post(expense_url, expense_data)
+        self.assertEqual(response.status_code, 302) # Redirects on success
+        self.assertTrue(Expense.objects.filter(category='Food', amount='45.50').exists())
+
+        # 2. Read the Expenses (Loads the dashboard)
+        response = self.client.get(expense_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '45.50')
+
+        # 3. Delete the Expense
+        delete_url = reverse('expense_delete', kwargs={'journey_id': self.journey.id, 'expense_date': '2026-05-02'})
+        response = self.client.post(delete_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Expense.objects.filter(category='Food').exists())
+
+    @patch('journeys.views.requests.post')
+    @patch('journeys.views.geolocator.geocode')
+    def test_surprise_me_aws_integration(self, mock_geocode, mock_post):
+        """Tests the AWS Microservice integration without actually calling AWS."""
+        
+        # 1. Mock the Geocoder so we don't hit their API
+        mock_geocode.return_value.latitude = 48.8566
+        mock_geocode.return_value.longitude = 2.3522
+
+        # 2. Mock the AWS API Gateway Response perfectly!
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "metadata": {"count": 1},
+            "data": [
+                {
+                    "trip_data": {
+                        "city": "Mockville",
+                        "country": "Mockland",
+                        "description": "A beautiful test destination."
+                    }
+                }
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        # 3. Call the Surprise Me view
+        surprise_url = reverse('surprise_me')
+        response = self.client.get(surprise_url)
+
+        # 4. Verify the view processed the "AWS" data correctly
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Expedition to Mockville')
+        self.assertContains(response, 'Mockland')
+        
+        # Verify our code actually tried to call the API
+        mock_post.assert_called_once()
