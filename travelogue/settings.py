@@ -89,16 +89,40 @@ WSGI_APPLICATION = 'travelogue.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
-        'USER': os.environ.get('DB_USER', 'adminuser'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
-        'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
+#         'USER': os.environ.get('DB_USER', 'adminuser'),
+#         'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
+#         'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
+#         'PORT': os.environ.get('DB_PORT', '5432'),
+#     }
+# }
+
+
+# 1. CI/CD Sandbox: If GitHub Actions is running this, use a fast local SQLite database
+if os.environ.get('GITHUB_ACTIONS') == 'true':
+    print("🚀 CI/CD Pipeline Detected: Using local SQLite database for tests.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+# 2. Production/Local: Otherwise, connect to your real AWS RDS Database
+else:
+    print("🌍 Standard Environment Detected: Using AWS RDS PostgreSQL.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'travelogue_db'),
+            'USER': os.environ.get('DB_USER', 'adminuser'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'ADMINpassword'),
+            'HOST': os.environ.get('DB_HOST', 'shared-master-db.cuz4g626e6hn.us-east-1.rds.amazonaws.com'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
