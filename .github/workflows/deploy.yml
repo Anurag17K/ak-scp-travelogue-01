@@ -27,7 +27,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install coverage
-          coverage run manage.py test
+          coverage run --source='journeys' manage.py test
           coverage xml
           
       - name: SonarCloud Scan
