@@ -48,23 +48,24 @@ jobs:
           region: us-east-1 
           deployment_package: deploy.zip
 
+      # ---------------------------------------------------
+      # 3. DYNAMIC SECURITY SCAN (DAST)
+      # ---------------------------------------------------
       - name: Bulletproof permissions for ZAP
         run: |
-          # Pre-create the exact file ZAP wants to make and open it completely
           touch zap.yaml
           chmod 777 zap.yaml
           chmod -R 777 ${{ github.workspace }}
 
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
-        continue-on-error: true
+        continue-on-error: true  # <--- This stops the 400 Bad Request from ruining the pipeline
         with:
           target: 'https://travelogue.anuragktech.me/'
           fail_action: false
 
-      # NEW: Manually grab the HTML report using GitHub's updated API
       - name: Upload ZAP HTML Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # <--- This safely grabs the HTML file
         with:
           name: ZAP-Security-Report
           path: report_html.html
