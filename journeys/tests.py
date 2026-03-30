@@ -94,23 +94,24 @@ class JourneyCRUDTests(TestCase):
     @patch('journeys.views.get_opentripmap_data')
     @patch('journeys.views.requests.get')
     def test_journey_detail_view(self, mock_requests_get, mock_otm):
-        mock_api_response = MagicMock()
-        mock_api_response.status_code = 200
         
-        # --- THE FIX: We expanded the mock data to include the keys your HTML expects ---
-        mock_api_response.json.return_value = {
-            "current_weather": {
-                "temperature": 15.0,
-                "latitude": 53.3498,   # <-- Template was crashing looking for this!
-                "longitude": -6.2603,
-                "windspeed": 12.0,
-                "weathercode": 1
-            }
-        }
-        mock_requests_get.return_value = mock_api_response
+        # 1. Create Fake Response #1: Emergency Services (Expects a List)
+        mock_emergency = MagicMock()
+        mock_emergency.status_code = 200
+        mock_emergency.json.return_value = [{'name': 'Test Hospital', 'latitude': 53.3, 'longitude': -6.2}]
 
+        # 2. Create Fake Response #2: Weather API (Expects a Dictionary)
+        mock_weather = MagicMock()
+        mock_weather.status_code = 200
+        mock_weather.json.return_value = {"current_weather": {"temperature": 15.0, "windspeed": 12.0}}
+
+        # 3. THE FIX: Pass them in order! First call gets emergency, second call gets weather.
+        mock_requests_get.side_effect = [mock_emergency, mock_weather]
+
+        # 4. Mock the OpenTripMap helper
         mock_otm.return_value = [{'name': 'Fake Castle', 'type': 'Landmark'}]
 
+        # 5. Execute the view
         detail_url = reverse('journey_detail', args=[self.journey.id])
         response = self.client.get(detail_url, {'action': 'city'})
 

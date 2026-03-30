@@ -103,7 +103,7 @@ WSGI_APPLICATION = 'travelogue.wsgi.application'
 
 # 1. CI/CD Sandbox: If GitHub Actions is running this, use a fast local SQLite database
 if os.environ.get('GITHUB_ACTIONS') == 'true':
-    print("🚀 CI/CD Pipeline Detected: Using local SQLite database for tests.")
+    print("CI/CD Pipeline Detected: Using local SQLite database for tests.")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -112,7 +112,7 @@ if os.environ.get('GITHUB_ACTIONS') == 'true':
     }
 # 2. Production/Local: Otherwise, connect to your real AWS RDS Database
 else:
-    print("🌍 Standard Environment Detected: Using AWS RDS PostgreSQL.")
+    print("Standard Environment Detected: Using AWS RDS PostgreSQL.")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
