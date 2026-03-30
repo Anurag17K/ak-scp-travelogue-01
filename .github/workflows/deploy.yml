@@ -48,11 +48,16 @@ jobs:
           region: us-east-1 
           deployment_package: deploy.zip
 
+      - name: Bulletproof permissions for ZAP
+        run: |
+          # Pre-create the exact file ZAP wants to make and open it completely
+          touch zap.yaml
+          chmod 777 zap.yaml
+          chmod -R 777 ${{ github.workspace }}
+
       - name: OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: 'https://travelogue.anuragktech.me/'
           fail_action: false
-          
-          # NEW: Forces the action to use a cleaner name to avoid the 400 error
           artifact_name: 'zap_scan_report'
