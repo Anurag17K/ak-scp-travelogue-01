@@ -1,5 +1,6 @@
 import requests
 import random
+import json
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -291,57 +292,81 @@ FALLBACK_TRIPS = [
 
 @login_required
 def surprise_me(request):
-    # 1. A curated vault of actual, amazing global destinations with pre-fetched coordinates.
-    # This prevents Geocoding API timeouts and guarantees OpenTripMap has data!
-    REAL_DESTINATIONS = [
-        {'city': 'Kyoto', 'country': 'Japan', 'lat': 35.0116, 'lon': 135.7681},
-        {'city': 'Reykjavik', 'country': 'Iceland', 'lat': 64.1466, 'lon': -21.9426},
-        {'city': 'Florence', 'country': 'Italy', 'lat': 43.7695, 'lon': 11.2558},
-        {'city': 'Marrakech', 'country': 'Morocco', 'lat': 31.6295, 'lon': -7.9811},
-        {'city': 'Cape Town', 'country': 'South Africa', 'lat': -33.9249, 'lon': 18.4241},
-        {'city': 'Cusco', 'country': 'Peru', 'lat': -13.5226, 'lon': -71.9673},
-        {'city': 'Prague', 'country': 'Czechia', 'lat': 50.0755, 'lon': 14.4378},
-        {'city': 'Hanoi', 'country': 'Vietnam', 'lat': 21.0285, 'lon': 105.8542},
-        {'city': 'Edinburgh', 'country': 'Scotland', 'lat': 55.9533, 'lon': -3.1883},
-        {'city': 'Cartagena', 'country': 'Colombia', 'lat': 10.3910, 'lon': -75.4794}
-    ]
-
-    travel_descriptions = [
-        "A perfect getaway to capture some stunning photography. Explore the hidden streets and rich local culture.",
-        "Immerse yourself in breathtaking landscapes. Make sure to bring your camera for this incredible adventure!",
-        "From historical landmarks to vibrant local life, this destination offers endless opportunities to explore and unwind."
-    ]
-
+    import json
     suggested_trips = []
     
-    # 2. Randomly select 3 unique destinations from our curated list
-    chosen_spots = random.sample(REAL_DESTINATIONS, 3)
+    # 1. Configuration matches the successful cURL exactly
+    api_url = "https://1omvjh3lv3.execute-api.us-east-1.amazonaws.com/generate"
+    api_params = {"count": 3}
+    payload = {
+        "trip_data": "travel.travel_package" 
+    }
 
-    for spot in chosen_spots:
-        full_name = f"{spot['city']}, {spot['country']}"
+    try:
+        # 2. Call the external AWS Microservice
+        response = requests.post(api_url, params=api_params, json=payload, timeout=8)
+        response.raise_for_status() 
+        api_results = response.json()
         
-        # 3. Fetch live attractions from OpenTripMap directly using the pre-baked coordinates
-        attractions = []
-        try:
-            all_spots = get_opentripmap_data(spot['lat'], spot['lon'])
-            attractions = all_spots[:3] if all_spots else []
-        except Exception as e:
-            print(f"OpenTripMap Error for {full_name}: {e}")
+        # Unwrapping (Just in case AWS API Gateway wraps it in a 'body' string)
+        if isinstance(api_results, dict) and 'body' in api_results:
+            try:
+                api_results = json.loads(api_results['body'])
+            except json.JSONDecodeError:
+                messages.error(request, "Failed to decode the travel data from the server.")
+                return redirect('journey_list')
 
-        # Generate a random future date within the next 6 months for the UI
-        random_days = random.randint(14, 180)
-        trip_date = date.today() + timedelta(days=random_days)
+        # --- THE FIX: Target the "data" key explicitly ---
+        # If it's a dict, grab the 'data' list. Otherwise, assume it's already a list.
+        trip_list = api_results.get('data', []) if isinstance(api_results, dict) else api_results
 
-        # 4. Package the data for the template
-        suggested_trips.append({
-            'title': f"Expedition to {spot['city']}",
-            'city': full_name,
-            'description': random.choice(travel_descriptions),
-            'date': str(trip_date),
-            'attractions': attractions,
-            'lat': spot['lat'],
-            'lon': spot['lon']
-        })
+        # Ensure we actually have a list before we loop
+        if not isinstance(trip_list, list):
+            print(f"Unexpected data type received: {type(trip_list)}")
+            messages.error(request, "Received unexpected data format from the server.")
+            return redirect('journey_list')
+        # ------------------------------------------------
+
+        # 3. Process the dynamic data
+        for item in trip_list:
+            trip = item.get('trip_data', {})
+            city_name = trip.get('city', 'Unknown City')
+            country_name = trip.get('country', 'Unknown Country')
+            description = trip.get('description', 'A wonderful destination to explore.')
+            
+            full_name = f"{city_name}, {country_name}"
+            
+            # 4. Fetch dynamic coordinates so OpenTripMap can find attractions
+            location = geolocator.geocode(full_name)
+            lat = location.latitude if location else None
+            lon = location.longitude if location else None
+            
+            # 5. Fetch live attractions using the new dynamic coordinates
+            attractions = []
+            if lat and lon:
+                try:
+                    all_spots = get_opentripmap_data(lat, lon)
+                    attractions = all_spots[:3] if all_spots else []
+                except Exception as e:
+                    print(f"OpenTripMap Error for {full_name}: {e}")
+
+            random_days = random.randint(14, 180)
+            trip_date = date.today() + timedelta(days=random_days)
+
+            suggested_trips.append({
+                'title': f"Expedition to {city_name}",
+                'city': full_name,
+                'description': description,
+                'date': str(trip_date),
+                'attractions': attractions,
+                'lat': lat,
+                'lon': lon
+            })
+
+    except requests.exceptions.RequestException as e:
+        print(f"External AWS API Error: {e}")
+        messages.error(request, "Our travel inspiration engine is currently taking a nap. Try again later!")
+        return redirect('journey_list')
 
     return render(request, 'journeys/surprise_me.html', {'suggestions': suggested_trips})
 
