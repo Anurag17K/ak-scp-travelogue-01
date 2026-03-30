@@ -63,8 +63,8 @@ class TravelogueExtendedTests(TestCase):
     def setUp(self):
         self.client = Client()
         # Create a user and log them in
-        self.user = User.objects.create_user(username='finance_guru', password='Password123!')
-        self.client.login(username='finance_guru', password='Password123!')
+        self.user = User.objects.create_user(username='finance_test1', password='Password123!')
+        self.client.login(username='finance_test1', password='Password123!')
         
         # Create a base Journey to attach expenses to
         self.journey = Journey.objects.create(
@@ -137,3 +137,52 @@ class TravelogueExtendedTests(TestCase):
         
         # Verify our code actually tried to call the API
         mock_post.assert_called_once()
+    
+    @patch('journeys.views.requests.post')
+    def test_surprise_me_api_failure(self, mock_post):
+        """SAD PATH: Tests if the app survives when the AWS API crashes."""
+        import requests
+        
+        # 1. Force the mocked AWS server to throw a nasty Timeout Error
+        mock_post.side_effect = requests.exceptions.RequestException("AWS Server is down!")
+        
+        # 2. Try to load the Surprise Me page
+        surprise_url = reverse('surprise_me')
+        response = self.client.get(surprise_url)
+        
+        # 3. Verify the app didn't crash (500), but gracefully redirected (302) to the timeline
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('journey_list'))
+
+    @patch('journeys.views.requests.get')
+    def test_available_consultations_loads(self, mock_get):
+        """HAPPY PATH: Tests the Consultation API GET request."""
+        # 1. Mock the API returning a valid time slot
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {'slots': [{'id': 99, 'time': '14:00'}]}
+        mock_get.return_value = mock_response
+
+        # 2. Load the page
+        url = reverse('available_consultations')
+        response = self.client.get(url)
+
+        # 3. Verify success
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '14:00')
+
+    @patch('journeys.views.requests.post')
+    def test_book_consultation_success(self, mock_post):
+        """HAPPY PATH: Tests booking a consultation via the external API."""
+        # 1. Mock a successful 200 OK booking response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        # 2. Submit the booking POST request
+        url = reverse('book_consultation', args=[99])
+        response = self.client.post(url)
+
+        # 3. Verify we get redirected to the "My Appointments" page
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('my_appointments'))
