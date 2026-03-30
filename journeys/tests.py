@@ -96,7 +96,17 @@ class JourneyCRUDTests(TestCase):
     def test_journey_detail_view(self, mock_requests_get, mock_otm):
         mock_api_response = MagicMock()
         mock_api_response.status_code = 200
-        mock_api_response.json.return_value = {"current_weather": {"temperature": 15.0}}
+        
+        # --- THE FIX: We expanded the mock data to include the keys your HTML expects ---
+        mock_api_response.json.return_value = {
+            "current_weather": {
+                "temperature": 15.0,
+                "latitude": 53.3498,   # <-- Template was crashing looking for this!
+                "longitude": -6.2603,
+                "windspeed": 12.0,
+                "weathercode": 1
+            }
+        }
         mock_requests_get.return_value = mock_api_response
 
         mock_otm.return_value = [{'name': 'Fake Castle', 'type': 'Landmark'}]
