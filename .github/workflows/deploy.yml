@@ -7,11 +7,22 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Elastic Beanstalk
+    name: Build, Scan, and Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Crucial for SonarCloud to analyze git history properly
+
+      # ---------------------------------------------------
+      # 1. STATIC SECURITY SCAN (SAST) - Runs before deploy
+      # ---------------------------------------------------
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Provided by GitHub automatically
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # You must add this to GitHub Secrets
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -19,18 +30,29 @@ jobs:
           python-version: '3.11'
 
       - name: Create ZIP deployment package
-        # Note: I added -x "*.sqlite3" to protect your database if it's stored on the server!
         run: |
           zip -r deploy.zip . -x "venv/*" "*.git*" ".github*" "__pycache__/*" "*.pyc" "*.sqlite3"
 
+      # ---------------------------------------------------
+      # 2. DEPLOYMENT
+      # ---------------------------------------------------
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          # Session token removed for standard AWS accounts
           application_name: travelogue
           environment_name: travelogue-env-01
           version_label: "travelogue-${{ github.sha }}"
-          region: us-east-1 # Adjusted to Dublin for NCI proximity
+          region: us-east-1
           deployment_package: deploy.zip
+
+      # ---------------------------------------------------
+      # 3. DYNAMIC SECURITY SCAN (DAST) - Runs against live site
+      # ---------------------------------------------------
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          # IMPORTANT: Replace this with your actual Elastic Beanstalk URL
+          target: 'https://travelogue.anuragktech.me/'
+          fail_action: false # Set to true later if you want failed scans to turn the pipeline red
