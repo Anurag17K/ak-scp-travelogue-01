@@ -140,3 +140,29 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# --- SECURE COOKIES & HEADERS (OWASP ZAP FIXES) ---
+
+# Ensures cookies are only sent over HTTPS 
+# (Fixes: Cookie Without Secure Flag)
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# Prevents JavaScript from reading the session cookie 
+# (Fixes: Cookie No HttpOnly Flag)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# Forces the browser to strictly use HTTPS for the next year
+# (Fixes: Strict-Transport-Security Header Not Set)
+SECURE_HSTS_SECONDS = 31536000 
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Prevents the browser from guessing the content type
+# (Fixes: X-Content-Type-Options Header Missing)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Defends against Clickjacking by preventing iframes
+# (Fixes: X-Frame-Options warnings)
+X_FRAME_OPTIONS = 'DENY'
