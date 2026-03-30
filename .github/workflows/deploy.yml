@@ -9,33 +9,34 @@ jobs:
   deploy:
     name: Build, Scan, and Deploy
     runs-on: ubuntu-latest
+    
+    # 1. NEW: Give the pipeline permission to create the ZAP Bug Ticket
+    permissions:
+      contents: read
+      issues: write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Crucial for SonarCloud to analyze git history properly
+          fetch-depth: 0
 
-      # ---------------------------------------------------
-      # 1. STATIC SECURITY SCAN (SAST) - Runs before deploy
-      # ---------------------------------------------------
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Provided by GitHub automatically
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
+      # 2. NEW: Added ".scannerwork/*" to the exclusion list
       - name: Create ZIP deployment package
         run: |
-          zip -r deploy.zip . -x "venv/*" "*.git*" ".github*" "__pycache__/*" "*.pyc" "*.sqlite3"
+          zip -r deploy.zip . -x "venv/*" "*.git*" ".github*" "__pycache__/*" "*.pyc" "*.sqlite3" ".scannerwork/*"
 
-      # ---------------------------------------------------
-      # 2. DEPLOYMENT
-      # ---------------------------------------------------
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
@@ -44,12 +45,9 @@ jobs:
           application_name: travelogue
           environment_name: travelogue-env-01
           version_label: "travelogue-${{ github.sha }}"
-          region: us-east-1
+          region: us-east-1 
           deployment_package: deploy.zip
 
-      # ---------------------------------------------------
-      # 3. DYNAMIC SECURITY SCAN (DAST) - Runs against live site
-      # ---------------------------------------------------
       - name: Fix workspace permissions for ZAP
         run: chmod -R 777 ${{ github.workspace }}
 
