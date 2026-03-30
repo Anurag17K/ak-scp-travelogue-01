@@ -21,6 +21,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Run Core Flow Tests
+        run: |
+          pip install -r requirements.txt
+          pip install coverage
+          # 1. Run the tests and collect data
+          coverage run manage.py test
+          # 2. Convert that data into the XML format SonarCloud requires
+          coverage xml
+          
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
