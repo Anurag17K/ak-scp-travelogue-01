@@ -17,4 +17,6 @@ urlpatterns = [
     path('<int:journey_id>/expenses/delete/<str:expense_date>/', views.expense_delete, name='expense_delete'),
     path('surprise-me/', views.surprise_me, name='surprise_me'),
     path('surprise-me/save/', views.save_inspiration, name='save_inspiration'),
+    path('journey/<int:id>/upload/', views.upload_media, name='upload_media'),
+    path('journey/<int:id>/media/<int:media_id>/delete/', views.delete_media, name='delete_media'),
 ]

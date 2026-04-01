@@ -37,7 +37,7 @@
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: auto auto; /* Flexible rows */
+            grid-template-rows: auto auto; 
             gap: 20px;
         }
 
@@ -61,14 +61,38 @@
         .box-notes { grid-column: span 2; }
         .box-weather { grid-column: span 1; background: #fff7ed; border-color: #fed7aa; }
         .box-controls { grid-column: span 1; }
-        .box-attractions { grid-column: span 4; } /* Wide section for landmarks */
-        .box-safety { grid-column: span 4; }      /* Wide section for infrastructure */
+        .box-gallery { grid-column: span 4; } /* New Gallery Box */
+        .box-attractions { grid-column: span 4; } 
+        .box-safety { grid-column: span 4; }  
 
         /* Weather Content */
         .weather-content { display: flex; justify-content: space-between; align-items: center; }
         .weather-temp { font-size: 2.5em; font-weight: 900; color: var(--orange-dark); }
 
-        /* Attractions Grid (Internal) */
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .gallery-item {
+            position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+        }
+        .gallery-img {
+            width: 100%; height: 180px; object-fit: cover; display: block;
+        }
+        .gallery-meta {
+            position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.75); 
+            color: white; padding: 8px; font-size: 11px; font-weight: 600;
+            display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(4px);
+        }
+        .delete-btn {
+            background: #ef4444; color: white; border: none; border-radius: 6px; 
+            cursor: pointer; padding: 4px 8px; font-weight: bold; transition: 0.2s;
+        }
+        .delete-btn:hover { background: #dc2626; }
+
+        /* Attractions Grid */
         .attractions-inner-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -81,7 +105,7 @@
         .attraction-card:hover { border-color: var(--orange); background: white; }
         .attraction-tag { font-size: 9px; font-weight: 900; color: var(--orange); text-transform: uppercase; }
 
-        /* Safety Feed (Internal Grid) */
+        /* Safety Feed */
         .safety-inner-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -98,17 +122,15 @@
             display: block; width: 100%; padding: 12px; margin-bottom: 10px;
             border-radius: 12px; border: none; font-weight: 800; font-size: 13px;
             cursor: pointer; text-align: center; text-decoration: none;
-            transition: 0.2s;
-            box-sizing: border-box; /* Ensures padding doesn't push buttons out of the box */
+            transition: 0.2s; box-sizing: border-box; 
         }
         .btn-orange { background: var(--orange); color: white; }
         .btn-slate { background: var(--slate); color: white; }
-        .btn-dark { background: #0f172a; color: white; } /* Added for Expense button */
+        .btn-dark { background: #0f172a; color: white; } 
         .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
         .type-badge { background: #fff7ed; color: var(--orange-dark); padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
 
-        /* Custom Scrollbar */
         .safety-inner-grid::-webkit-scrollbar { width: 4px; }
         .safety-inner-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -120,7 +142,7 @@
 <header class="hero">
     <div class="hero-content">
         <h1>{{ journey.title }}</h1>
-        <div style="font-weight: 700; opacity: 0.9;">📍 {{ journey.city }}</div>
+        <div style="font-weight: 700; opacity: 0.9;">{{ journey.city }}</div>
     </div>
     <div class="hero-meta">
         <div>{{ journey.trip_date }}</div>
@@ -131,7 +153,7 @@
 <div class="bento-grid">
     
     <section class="bento-box box-notes">
-        <h3>📝 Field Notes</h3>
+        <h3>Field Notes</h3>
         <p style="margin: 0; color: var(--slate-light); font-weight: 500;">
             {{ journey.description|default:"No notes provided for this record." }}
         </p>
@@ -153,16 +175,52 @@
     </section>
 
     <section class="bento-box box-controls">
-        <h3>⚙️ Controls</h3>
+        <h3>Controls</h3>
         <a href="?action=city" class="btn btn-orange">SCAN AREA</a>
         <button onclick="fetchCurrentLocation()" class="btn btn-slate">USE GPS</button>
-        <a href="{% url 'expense_tracker' journey.id %}" class="btn btn-dark">💰 TRIP EXPENSES</a>
+        <a href="{% url 'expense_tracker' journey.id %}" class="btn btn-dark">TRIP EXPENSES</a>
         <div id="status-msg" style="text-align: center; font-size: 10px; font-weight: 800; color: var(--orange);"></div>
+    </section>
+
+    <section class="bento-box box-gallery">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">📸 Geospatial Gallery</h3>
+            <form action="{% url 'upload_media' journey.id %}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+                {% csrf_token %}
+                <input type="file" name="image" accept="image/*" required style="font-size: 12px; color: var(--slate-light);">
+                <button type="submit" class="btn btn-slate" style="width: auto; padding: 8px 16px; margin: 0;">UPLOAD TO S3</button>
+            </form>
+        </div>
+
+        <div class="gallery-grid">
+            {% for media in journey.media_gallery.all %}
+                <div class="gallery-item">
+                    <img src="{{ media.image.url }}" alt="Trip Photo" class="gallery-img">
+                    <div class="gallery-meta">
+                        <span>
+                            {% if media.latitude %}
+                                {{ media.latitude|floatformat:4 }}, {{ media.longitude|floatformat:4 }}
+                            {% else %}
+                                No GPS Data
+                            {% endif %}
+                        </span>
+                        <form action="{% url 'delete_media' journey.id media.id %}" method="POST" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn" title="Delete Photo">X</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="grid-column: 1/-1; text-align: center; color: var(--slate-light); padding: 30px; border: 2px dashed var(--border); border-radius: 16px;">
+                    No photos stored in AWS S3 yet. Upload an image to extract its coordinates!
+                </p>
+            {% endfor %}
+        </div>
     </section>
 
     <section class="bento-box box-attractions">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">✨ Top Attractions</h3>
+            <h3 style="margin: 0;">Top Attractions</h3>
             <span class="type-badge">POWERED BY OPENTRIPMAP</span>
         </div>
         <div class="attractions-inner-grid">
@@ -184,7 +242,7 @@
 
     <section class="bento-box box-safety">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">🛡️ Safety Infrastructure</h3>
+            <h3 style="margin: 0;">Safety Infrastructure</h3>
             <div id="count-badge" style="background: var(--slate); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;">
                 {{ emergency_services|length }} Records
             </div>

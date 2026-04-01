@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'journeys',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -164,6 +165,14 @@ LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# --- AWS S3 Configuration ---
+# Boto3 will automatically use your AllAccessEC2Role for authentication!
+AWS_STORAGE_BUCKET_NAME = 'travelogue-media-bucket'
+AWS_S3_REGION_NAME = 'us-east-1'
+
+# Tell Django to use S3 for all user-uploaded media
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # --- SECURE COOKIES & HEADERS (OWASP ZAP FIXES) ---
 

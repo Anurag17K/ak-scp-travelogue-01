@@ -420,3 +420,30 @@ def save_inspiration(request):
         return redirect('journey_detail', id=new_journey.id)
         
     return redirect('surprise_me')
+
+@login_required
+def upload_media(request, id):
+    journey = get_object_or_404(Journey, id=id, user=request.user)
+    
+    if request.method == 'POST' and request.FILES.get('image'):
+        # The JourneyMedia save() method will automatically trigger the EXIF extraction
+        # and route the file to your AWS S3 bucket!
+        JourneyMedia.objects.create(
+            journey=journey,
+            image=request.FILES['image']
+        )
+        messages.success(request, "Photo securely uploaded to S3!")
+        
+    return redirect('journey_detail', id=journey.id)
+
+@login_required
+def delete_media(request, id, media_id):
+    journey = get_object_or_404(Journey, id=id, user=request.user)
+    media = get_object_or_404(JourneyMedia, id=media_id, journey=journey)
+    
+    if request.method == 'POST':
+        # Deleting the record also removes the file from S3 if django-storages is configured properly
+        media.delete()
+        messages.success(request, "Photo removed.")
+        
+    return redirect('journey_detail', id=journey.id)
