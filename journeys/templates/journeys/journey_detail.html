@@ -160,7 +160,7 @@
     </section>
 
     <section class="bento-box box-weather">
-        <h3>🌤️ Climate</h3>
+        <h3>Climate</h3>
         <div class="weather-content">
             {% if weather_data %}
                 <div>
@@ -184,7 +184,7 @@
 
     <section class="bento-box box-gallery">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">📸 Geospatial Gallery</h3>
+            <h3 style="margin: 0;">Geospatial Gallery</h3>
             <form action="{% url 'upload_media' journey.id %}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
                 {% csrf_token %}
                 <input type="file" name="image" accept="image/*" required style="font-size: 12px; color: var(--slate-light);">

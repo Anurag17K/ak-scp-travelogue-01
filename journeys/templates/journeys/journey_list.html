@@ -135,7 +135,7 @@
     {% endif %}
 
     <div class="toolbar">
-        <a href="{% url 'journey_create' %}" class="btn btn-primary">⚡ Plan New Trip</a>
+        <a href="{% url 'journey_create' %}" class="btn btn-primary">Plan New Trip</a>
         <a href="{% url 'available_consultations' %}" class="btn btn-secondary">Expert Booking</a>
         <a href="{% url 'surprise_me' %}" class="btn btn-secondary">Trip Inspiration</a>
     </div>
@@ -149,7 +149,7 @@
                         <div class="card-date">{{ journey.trip_date }}</div>
                     </div>
                     
-                    <div class="card-location">📍 {{ journey.city }}</div>
+                    <div class="card-location">{{ journey.city }}</div>
                     <p class="card-desc">{{ journey.description|default:"No description logs found for this entry." }}</p>
                     
                     <div class="card-actions">
