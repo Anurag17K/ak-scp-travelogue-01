@@ -15,8 +15,8 @@ from geopy.geocoders import Nominatim
 # --- CONFIGURATION ---
 EMERGENCY_API_BASE = "https://api.anuragktech.me/api/services/"
 APPOINTMENT_API_BASE = "https://2o7jj4hez6.execute-api.us-east-1.amazonaws.com"
-APPOINTMENT_API_KEY = "1c1a99f9-a3bb-4b35-bd73-fc72aa4d483f"
-DEFAULT_PROVIDER_ID = 4  
+APPOINTMENT_API_KEY = "58b5a2d4-3836-4afa-8330-9205498078c6"
+DEFAULT_PROVIDER_ID = 8  
 geolocator = Nominatim(user_agent="travelogue")
 
 
