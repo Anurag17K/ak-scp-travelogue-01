@@ -9,7 +9,7 @@ from django.contrib.auth import login
 from django import forms
 from django.contrib import messages
 from django.db.models import Sum
-from .models import Journey, Expense
+from .models import Journey, Expense, JourneyMedia
 from geopy.geocoders import Nominatim
 
 # --- CONFIGURATION ---
