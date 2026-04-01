@@ -29,22 +29,7 @@ class Expense(models.Model):
 class JourneyMedia(models.Model):
     journey = models.ForeignKey(Journey, on_delete=models.CASCADE, related_name='media_gallery')
     image = models.ImageField(upload_to='journey_media/')
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
-    def save(self, *args, **kwargs):
-        if self.image and not self.pk:
-            try:
-                img = Image.open(self.image)
-                exif = {ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS}
-                if 'GPSInfo' in exif:
-                    gps = exif['GPSInfo']
-                    def to_deg(v): return float(v[0]) + (float(v[1]) / 60.0) + (float(v[2]) / 3600.0)
-                    lat, lon = to_deg(gps[2]), to_deg(gps[4])
-                    if gps[1] == 'S': lat = -lat
-                    if gps[3] == 'W': lon = -lon
-                    self.latitude, self.longitude = lat, lon
-            except Exception:
-                pass 
-        super().save(*args, **kwargs)
+    def __str__(self):
+        return f"Photo for {self.journey.title}"

@@ -198,11 +198,7 @@
                     <img src="{{ media.image.url }}" alt="Trip Photo" class="gallery-img">
                     <div class="gallery-meta">
                         <span>
-                            {% if media.latitude %}
-                                {{ media.latitude|floatformat:4 }}, {{ media.longitude|floatformat:4 }}
-                            {% else %}
-                                No GPS Data
-                            {% endif %}
+                            {{ media.uploaded_at|date:"M d, Y" }}
                         </span>
                         <form action="{% url 'delete_media' journey.id media.id %}" method="POST" style="margin: 0;">
                             {% csrf_token %}
